@@ -15,6 +15,8 @@ export interface IceWindow {
   /** Area-mean analysis error on the latest day (for confidence). */
   meanErr: number | null;
   stride: number;
+  /** True when served from the committed snapshot because the live feed failed. */
+  stale?: boolean;
 }
 
 export interface IceSource {
@@ -30,6 +32,8 @@ export interface IceStatus {
   latencyHours: number;
   resolution: string;
   sources: IceSource[];
+  /** True when served from the committed snapshot because the live feed failed. */
+  stale?: boolean;
 }
 
 export interface IceWindowParams {

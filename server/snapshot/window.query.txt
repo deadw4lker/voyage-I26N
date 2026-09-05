@@ -1,0 +1,1 @@
+?minLat=-75&maxLat=-55&minLon=25&maxLon=85&stride=2&days=7

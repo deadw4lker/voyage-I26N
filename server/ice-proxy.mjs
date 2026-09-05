@@ -41,6 +41,48 @@ const TTL_DATA = 6 * 60 * 60 * 1000;
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DIST_DIR = path.resolve(__dirname, '..', 'dist');
 
+// Committed last-known-good snapshots (server/snapshot/). Served with
+// `stale: true` when NOAA ERDDAP is unreachable (e.g. stalls from some
+// datacenter networks), so the UI shows real dated data instead of failing.
+// PINNED_* must match ForecastView's useIceWindow params exactly.
+const SNAP_DIR = path.resolve(__dirname, 'snapshot');
+const PINNED_WINDOW_PARAMS = { minLat: -75, maxLat: -55, minLon: 25, maxLon: 85, stride: 2, days: 7 };
+let PINNED_WINDOW_QUERY = '?minLat=-75&maxLat=-55&minLon=25&maxLon=85&stride=2&days=7';
+try {
+  PINNED_WINDOW_QUERY = fs.readFileSync(path.join(SNAP_DIR, 'window.query.txt'), 'utf8').trim() || PINNED_WINDOW_QUERY;
+} catch {
+  // seed file absent — fall back to built-in pinned query
+}
+
+function readSnapshot(name) {
+  try {
+    return JSON.parse(fs.readFileSync(path.join(SNAP_DIR, `${name}.json`), 'utf8'));
+  } catch {
+    return null;
+  }
+}
+
+// Best-effort persistence of fresh fetches: keeps the on-disk snapshot warm
+// across restarts (Render filesystem is ephemeral, repo seed is the backup).
+function persistSnapshot(name, body) {
+  try {
+    fs.mkdirSync(SNAP_DIR, { recursive: true });
+    fs.writeFileSync(path.join(SNAP_DIR, `${name}.json`), body);
+  } catch {
+    // snapshots are optional — never fail a live response over them
+  }
+}
+
+// Serves the snapshot with `stale: true`. Returns false when no snapshot exists.
+function staleResponse(res, name) {
+  const snap = readSnapshot(name);
+  if (!snap) return false;
+  res.writeHead(200, { 'content-type': 'application/json', 'cache-control': 'public, max-age=60' }).end(
+    JSON.stringify({ ...snap, stale: true }),
+  );
+  return true;
+}
+
 const cache = new Map(); // key -> { exp: number, body: string }
 
 function getCached(key) {
@@ -114,7 +156,7 @@ async function getLatestDate() {
   if (hit) return hit;
   const res = await upstreamOk(
     'https://coastwatch.pfeg.noaa.gov/erddap/info/ncdcOisst21NrtAgg/index.json',
-    20000,
+    12000, // fail fast to the committed snapshot when the network stalls
   );
   const info = await res.json();
   const row = info.table.rows.find(
@@ -246,6 +288,13 @@ async function handleWindow(q) {
 
   const body = JSON.stringify({ date: latest, dates, lats, lons, ice, stride, meanErr });
   setCached(key, body, TTL_DATA);
+  const p = PINNED_WINDOW_PARAMS;
+  if (
+    minLat === p.minLat && maxLat === p.maxLat && minLon === p.minLon &&
+    maxLon === p.maxLon && stride === p.stride && days === p.days
+  ) {
+    persistSnapshot('window', body);
+  }
   return body;
 }
 
@@ -340,13 +389,19 @@ const server = http.createServer(async (req, res) => {
     if (req.method === 'GET' && pathname === '/api/ice/status') {
       try {
         const body = await handleStatus();
+        persistSnapshot('status', body);
         res.writeHead(200, { 'content-type': 'application/json', 'cache-control': 'public, max-age=3600' }).end(body);
-      } catch (e) { fail(e); }
+      } catch (e) {
+        if (!staleResponse(res, 'status')) fail(e);
+      }
     } else if (req.method === 'GET' && pathname === '/api/ice/window') {
       try {
         const body = await handleWindow(parseParams(req.url));
         res.writeHead(200, { 'content-type': 'application/json', 'cache-control': 'public, max-age=21600' }).end(body);
-      } catch (e) { fail(e); }
+      } catch (e) {
+        const rawQuery = new URL(req.url || '/', 'http://x').search;
+        if (!(rawQuery === PINNED_WINDOW_QUERY && staleResponse(res, 'window'))) fail(e);
+      }
     } else if (req.method === 'GET' && pathname === '/api/ice/series') {
       try {
         const body = await handleSeries(parseParams(req.url));

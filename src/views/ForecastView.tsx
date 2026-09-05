@@ -40,10 +40,15 @@ export function ForecastView() {
 
   const dayMean = grid ? gridMean(grid) : null;
   const dayLabel = leadDays === 0 ? 'D0' : `D+${leadDays}`;
+  const modeLabel = isProjection
+    ? t('forecast.badge.projection')
+    : w?.stale
+      ? t('forecast.stale')
+      : t('forecast.badge.live');
   const info = w
-    ? `${dayLabel} · ${isProjection ? t('forecast.badge.projection') : t('forecast.badge.live')} · ${t('forecast.map.title')} ${dayMean === null ? '—' : `${Math.round(dayMean * 100)}%`}`
+    ? `${dayLabel} · ${modeLabel} · ${t('forecast.map.title')} ${dayMean === null ? '—' : `${Math.round(dayMean * 100)}%`}`
     : '';
-  const probeTag = `${dayLabel} ${isProjection ? t('forecast.badge.projection').toLowerCase() : t('forecast.badge.live').toLowerCase()}`;
+  const probeTag = `${dayLabel} ${modeLabel.toLowerCase()}`;
 
   const confidence = useMemo(() => {
     if (!w) return undefined;
@@ -68,7 +73,9 @@ export function ForecastView() {
 
   const hint =
     w
-      ? t('forecast.updated', { date: formatIceDate(w.date) })
+      ? w.stale
+        ? `${t('forecast.updated', { date: formatIceDate(w.date) })} · ${t('forecast.stale')}`
+        : t('forecast.updated', { date: formatIceDate(w.date) })
       : feed.state === 'error'
         ? t('forecast.offline')
         : t('forecast.hint');
@@ -95,7 +102,7 @@ export function ForecastView() {
           <div className="p-4 pb-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 flex-wrap">
             <span className="flex items-center gap-2">
               <h2 className="text-[14px] font-semibold text-ice">{t('forecast.map.title')}</h2>
-              <span className="badge">{isProjection ? t('forecast.badge.projection') : t('forecast.badge.live')}</span>
+              <span className="badge">{isProjection ? t('forecast.badge.projection') : w?.stale ? t('forecast.stale') : t('forecast.badge.live')}</span>
             </span>
             <SingleSelectChips options={sourceOptions} defaultValue="oisst" onChange={setSource} />
           </div>

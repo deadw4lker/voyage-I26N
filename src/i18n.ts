@@ -112,7 +112,8 @@ const resources = {
       'forecast.source.viirs': 'VIIRS NRT',
       'forecast.source.soon': 'Soon',
       'forecast.updated': 'Updated {{date}} · NOAA OISST',
-      'forecast.offline': 'Live feed unreachable — showing sample data',
+      'forecast.offline': 'Live feed unreachable — no cached data available',
+      'forecast.stale': 'Offline snapshot',
       'common.retry': 'Retry',
 
       // Icebergs
@@ -343,7 +344,8 @@ const resources = {
       'forecast.source.viirs': 'VIIRS NRT',
       'forecast.source.soon': 'जल्द',
       'forecast.updated': 'अपडेट {{date}} · NOAA OISST',
-      'forecast.offline': 'लाइव फ़ीड उपलब्ध नहीं — नमूना डेटा दिखाया जा रहा है',
+      'forecast.offline': 'लाइव फ़ीड उपलब्ध नहीं — कोई कैश्ड डेटा उपलब्ध नहीं',
+      'forecast.stale': 'ऑफ़लाइन स्नैपशॉट',
       'common.retry': 'पुनः प्रयास करें',
 
       // Icebergs
