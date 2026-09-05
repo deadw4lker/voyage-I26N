@@ -28,8 +28,10 @@ export interface IceSource {
 
 export interface IceStatus {
   latest: string;
-  generatedAt: string;
-  latencyHours: number;
+  /** Present on live responses; omitted in stored snapshots (volatile). */
+  generatedAt?: string;
+  /** Present on live responses; omitted in stored snapshots (volatile). */
+  latencyHours?: number;
   resolution: string;
   sources: IceSource[];
   /** True when served from the committed snapshot because the live feed failed. */

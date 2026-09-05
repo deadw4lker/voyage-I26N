@@ -1,0 +1,64 @@
+name: Refresh ice snapshots
+
+# Keeps server/snapshot/ (the offline fallback served when NOAA ERDDAP is
+# unreachable, e.g. from Render's network) updated with yesterday's real data:
+# boot our own proxy on the runner (runner network reaches NOAA), fetch the
+# live payloads through it, and push back to main only when data changed.
+# Render auto-deploys the push.
+
+on:
+  schedule:
+    - cron: '0 2 * * *' # daily 02:00 UTC, after NOAA's daily OISST update
+  workflow_dispatch: {} # manual "Run workflow" button for on-demand refresh
+
+permissions:
+  contents: write # lets GITHUB_TOKEN push the updated snapshots
+
+concurrency:
+  group: ice-snapshots
+  cancel-in-progress: true
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+        # no npm ci: the proxy uses only Node builtins, nothing to install
+
+      # Delete the payload files first (keep window.query.txt): guarantees anything
+      # saved below is genuinely fresh. (Without seed files the proxy 502s on
+      # upstream failure instead of serving stale data, and curl --fail catches that.)
+      - run: rm -f server/snapshot/status.json server/snapshot/window.json
+
+      - name: Start proxy
+        run: |
+          PORT=3001 node server/ice-proxy.mjs > /tmp/proxy.log 2>&1 &
+          echo $! > /tmp/proxy.pid
+          for i in $(seq 1 30); do
+            curl -sf http://localhost:3001/api/ice/status > /dev/null && break || sleep 5
+          done
+          curl -sf http://localhost:3001/api/ice/status > /dev/null
+
+      - name: Refresh snapshots
+        run: |
+          STATUS=$(curl -sf http://localhost:3001/api/ice/status)
+          echo "$STATUS" | grep -q '"stale"' && { echo 'status came back stale, aborting'; exit 1; }
+          # Drop volatile server-computed fields so the file only changes when NOAA data changes
+          node -e "const fs=require('fs'); const s=JSON.parse(process.argv[1]); delete s.generatedAt; delete s.latencyHours; fs.writeFileSync('server/snapshot/status.json', JSON.stringify(s));" "$STATUS"
+          QUERY=$(cat server/snapshot/window.query.txt 2>/dev/null || echo '?minLat=-75&maxLat=-55&minLon=25&maxLon=85&stride=2&days=7')
+          curl -sf "http://localhost:3001/api/ice/window${QUERY}" -o /tmp/window.json
+          grep -q '"stale"' /tmp/window.json && { echo 'window came back stale, aborting'; exit 1; }
+          node -e "JSON.parse(require('fs').readFileSync('/tmp/window.json','utf8'))"
+          cp /tmp/window.json server/snapshot/window.json
+          kill "$(cat /tmp/proxy.pid)" || true
+
+      - name: Commit and push if changed
+        run: |
+          git config user.name 'snapshot-bot'
+          git config user.email 'snapshot-bot@users.noreply.github.com'
+          git add server/snapshot
+          git diff --staged --quiet && echo 'no data change, skipping push' || (git commit -m "Refresh ice snapshots $(date -u +%F)" && git push)
