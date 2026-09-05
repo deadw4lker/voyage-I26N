@@ -8,7 +8,7 @@
   },
   "scripts": {
     "start": "node server/ice-proxy.mjs",
-    "dev": "vite",
+    "dev": "concurrently -k \"node server/ice-proxy.mjs\" vite",
     "server": "node server/ice-proxy.mjs",
     "build": "tsc -b && vite build",
     "serve": "npm run build && node server/ice-proxy.mjs",
@@ -36,6 +36,7 @@
     "@types/react-dom": "^19.2.4",
     "@vitejs/plugin-react": "^6.1.0",
     "autoprefixer": "^10.5.4",
+    "concurrently": "^10.0.5",
     "oxlint": "^1.79.0",
     "postcss": "^8.5.28",
     "tailwindcss": "^4.3.3",
