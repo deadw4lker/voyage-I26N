@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: hima-drishti
+    runtime: node
+    buildCommand: npm install && npm run build
+    startCommand: node server/ice-proxy.mjs
+    envVars:
+      - key: NODE_VERSION
+        value: 22
