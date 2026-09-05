@@ -7,6 +7,7 @@
     "node": ">=20"
   },
   "scripts": {
+    "start": "node server/ice-proxy.mjs",
     "dev": "vite",
     "server": "node server/ice-proxy.mjs",
     "build": "tsc -b && vite build",
