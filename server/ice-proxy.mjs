@@ -83,6 +83,50 @@ function staleResponse(res, name) {
   return true;
 }
 
+// Fast failover: remember recent upstream outages (memory + disk, so it
+// survives restarts/sleeps) and skip doomed upstream attempts during a
+// cooldown. Any HTTP response proves the path works and clears the flag;
+// the cooldown expiry allows a fresh probe so recovery is automatic.
+const UPSTREAM_STATE_FILE = path.join(SNAP_DIR, 'upstream.state.json');
+const UPSTREAM_COOLDOWN_MS = 10 * 60 * 1000;
+let upstreamDownSince = 0;
+try {
+  const st = JSON.parse(fs.readFileSync(UPSTREAM_STATE_FILE, 'utf8'));
+  if (st && typeof st.downSince === 'number') upstreamDownSince = st.downSince;
+} catch {
+  // no recorded outage — probe normally
+}
+
+function noteUpstreamUp() {
+  if (!upstreamDownSince) return;
+  upstreamDownSince = 0;
+  console.error('[ice-proxy] upstream reachable again, outage flag cleared');
+  try {
+    fs.rmSync(UPSTREAM_STATE_FILE, { force: true });
+  } catch {}
+}
+
+function noteUpstreamDown() {
+  const first = !upstreamDownSince;
+  if (first) {
+    upstreamDownSince = Date.now();
+    console.error('[ice-proxy] upstream unreachable, fast-failover armed for 10 min');
+  }
+  try {
+    fs.mkdirSync(SNAP_DIR, { recursive: true });
+    fs.writeFileSync(UPSTREAM_STATE_FILE, JSON.stringify({ downSince: upstreamDownSince }));
+  } catch {}
+}
+
+function upstreamKnownDown() {
+  if (!upstreamDownSince) return false;
+  if (Date.now() - upstreamDownSince > UPSTREAM_COOLDOWN_MS) {
+    upstreamDownSince = 0; // cooldown expired — allow a fresh probe
+    return false;
+  }
+  return true;
+}
+
 const cache = new Map(); // key -> { exp: number, body: string }
 
 function getCached(key) {
@@ -120,9 +164,18 @@ function rawGet(url, timeoutMs) {
 }
 
 async function upstream(url, timeoutMs = 25000) {
+  if (upstreamKnownDown()) throw new Error('NOAA ERDDAP recently unreachable, skipping probe');
   let current = url;
   for (let hop = 0; hop < 3; hop++) {
-    const { status, headers, body } = await rawGet(current, timeoutMs);
+    let r;
+    try {
+      r = await rawGet(current, timeoutMs);
+    } catch (e) {
+      noteUpstreamDown();
+      throw e;
+    }
+    noteUpstreamUp(); // any HTTP response (even 429/5xx) proves the network path works
+    const { status, headers, body } = r;
     if (status >= 300 && status < 400 && headers.location) {
       current = new URL(headers.location, current).toString();
       continue;
@@ -389,7 +442,14 @@ const server = http.createServer(async (req, res) => {
     if (req.method === 'GET' && pathname === '/api/ice/status') {
       try {
         const body = await handleStatus();
-        persistSnapshot('status', body);
+        try {
+          // Persist without volatile server-computed fields, so the snapshot
+          // only changes when NOAA data changes (keeps the file committable).
+          const s = JSON.parse(body);
+          delete s.generatedAt;
+          delete s.latencyHours;
+          persistSnapshot('status', JSON.stringify(s));
+        } catch {}
         res.writeHead(200, { 'content-type': 'application/json', 'cache-control': 'public, max-age=3600' }).end(body);
       } catch (e) {
         if (!staleResponse(res, 'status')) fail(e);

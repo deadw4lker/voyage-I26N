@@ -12,6 +12,9 @@ dist
 dist-ssr
 *.local
 
+# Runtime upstream-outage flag (server/snapshot/) — local state, never commit
+server/snapshot/upstream.state.json
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
