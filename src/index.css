@@ -1,0 +1,226 @@
+@import "tailwindcss";
+
+@theme {
+  --color-abyss: #f1f4f7;
+  --color-abyss-2: #ffffff;
+  --color-shelf: #ffffff;
+  --color-shelf-2: #ffffff;
+  --color-ice: #111827;
+  --color-ice-dim: #4b5563;
+  --color-ice-faint: #8a94a6;
+  --color-cyan: #1f3a5f;
+  --color-cyan-soft: #eef2f6;
+  --color-violet: #4b5563;
+  --color-violet-soft: #f3f4f6;
+  --color-amber: #92400e;
+  --color-coral: #991b1b;
+  --color-mint: #065f46;
+  --color-border: #e3e8ef;
+  --color-border-strong: #cbd3df;
+  --shadow-glow: 0 1px 2px rgba(16,24,40,.06);
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --font-display: 'Inter', system-ui, sans-serif;
+  --font-body: 'Inter', system-ui, sans-serif;
+  --font-mono: 'Inter', system-ui, sans-serif;
+}
+
+@layer base {
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  html, body, #root {
+    height: 100%;
+  }
+
+  body {
+    background: #f1f4f7;
+    color: #111827;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  ::selection {
+    background: #dbe3ec;
+    color: #111827;
+  }
+
+  :focus-visible {
+    outline: 2px solid #1f3a5f;
+    outline-offset: 2px;
+    border-radius: 3px;
+  }
+
+  a {
+    color: #1f3a5f;
+    text-decoration: none;
+  }
+
+  .mono {
+    font-family: 'Inter', system-ui, sans-serif;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .font-display {
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+
+  .font-body {
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+}
+
+@layer components {
+  .panel {
+    @apply bg-white border border-border rounded-lg p-5;
+    box-shadow: 0 1px 2px rgba(16,24,40,.05);
+    background-image: none;
+  }
+
+  .panel.hero {
+    @apply p-0 overflow-hidden;
+  }
+
+  .panel-head {
+    @apply flex items-start justify-between gap-3 mb-3.5 flex-wrap;
+  }
+
+  .panel-head h2 {
+    @apply text-[14px] font-semibold tracking-normal text-ice;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+
+  .hint {
+    @apply text-[12px] text-ice-faint;
+  }
+
+  .badge {
+    @apply inline-flex items-center gap-1.5 text-[11px] font-medium px-2 py-0.5 rounded border border-border text-ice-dim whitespace-nowrap bg-white;
+  }
+
+  .badge .dot {
+    @apply w-1.5 h-1.5 rounded-full m-0 bg-ice-faint;
+  }
+
+  .badge.live,
+  .badge.ai,
+  .badge.high,
+  .badge.med,
+  .badge.low {
+    @apply text-ice-dim border-border bg-white;
+  }
+
+  .btn {
+    @apply text-[13px] font-medium px-3.5 py-2 rounded-md border border-border-strong bg-white text-ice cursor-pointer transition-colors duration-150;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+
+  .btn:hover:not(:disabled) {
+    @apply bg-[#f8fafc] border-[#9aa7ba];
+  }
+
+  .btn.primary {
+    @apply bg-[#111e32] text-white border-[#111e32];
+  }
+
+  .btn.primary:hover:not(:disabled) {
+    @apply bg-[#1f3a5f] border-[#1f3a5f];
+  }
+
+  .btn.ghost {
+    @apply text-ice-dim bg-white;
+  }
+
+  .btn:disabled {
+    @apply opacity-50 cursor-not-allowed pointer-events-none;
+  }
+
+  .chip {
+    @apply text-[12px] font-medium px-3 py-1.5 rounded-md border border-border text-ice-dim cursor-pointer bg-white transition-colors duration-150;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+
+  .chip.active {
+    @apply text-white border-[#111e32] bg-[#111e32];
+  }
+
+  .chip:hover:not(.active) {
+    @apply border-border-strong text-ice bg-[#f8fafc];
+  }
+
+  input[type=range] {
+    @apply appearance-none w-full h-1 rounded-full bg-[#dbe1e9] outline-none;
+  }
+
+  input[type=range]::-webkit-slider-thumb {
+    @apply appearance-none w-3.5 h-3.5 rounded-full bg-[#111e32] border-2 border-white cursor-pointer;
+    box-shadow: 0 1px 2px rgba(16,24,40,.2);
+  }
+
+  input[type=range]::-moz-range-thumb {
+    @apply w-3.5 h-3.5 rounded-full bg-[#111e32] border-2 border-white cursor-pointer;
+  }
+
+  .tbl {
+    @apply w-full border-collapse text-[13px];
+  }
+
+  .tbl th {
+    @apply text-left font-medium text-ice-faint text-[11px] tracking-normal pb-2 border-b border-border px-2.5;
+  }
+
+  .tbl td {
+    @apply py-2.5 px-2.5 border-b border-border text-ice-dim;
+  }
+
+  .tbl td.mono {
+    @apply text-ice text-[12.5px];
+  }
+
+  .tbl tbody tr {
+    @apply cursor-pointer;
+  }
+
+  .tbl tbody tr:hover td {
+    @apply bg-[#f8fafc];
+  }
+
+  .tbl tbody tr.selected td {
+    @apply bg-[#eef2f6];
+  }
+
+  .tbl tbody tr:last-child td {
+    @apply border-b-0;
+  }
+}
+
+@layer utilities {
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: #cbd3df transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background-color: #cbd3df;
+    border-radius: 3px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background-color: #9aa7ba;
+  }
+}
