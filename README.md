@@ -1,4 +1,4 @@
-# Hima-Drishti — Antarctic Intelligent Ship Routing (SIH Prototype)
+# Voyage-I26N — Antarctic Intelligent Ship Routing (SIH Prototype)
 
 AI-assisted dynamic iceberg-risk mapping and risk-aware A* ship routing for the
 Prydz Bay / Bharati Station sector._demo predictions are **simulations**, not
@@ -52,8 +52,8 @@ npm run serve   # builds dist/ and serves it on $PORT (default 3001)
 Docker (backend):
 
 ```bash
-docker build -f backend/Dockerfile -t hima-backend .
-docker run -p 8000:8000 hima-backend
+docker build -f backend/Dockerfile -t voyage-backend .
+docker run -p 8000:8000 voyage-backend
 ```
 
 ## Backend API (FastAPI, :8000)
