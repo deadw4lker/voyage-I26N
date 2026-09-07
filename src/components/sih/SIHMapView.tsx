@@ -97,8 +97,22 @@ export function SIHMapView({
     return { trajectoryLines: lines, totalTracks: total };
   }, [layers.predictedTrajectories, monteCarloData]);
 
+  const ROUTE_COLORS = {
+    balanced: '#38bdf8', // bright sky — recommended
+    fastest: '#fbbf24', // bright amber
+    safest: '#34d399', // bright emerald
+  } as const;
+
   const routeColor =
-    activeRoute?.mode === 'safest' ? '#3faf7d' : activeRoute?.mode === 'fastest' ? '#d9a13b' : '#6aa9d6';
+    activeRoute?.mode === 'safest'
+      ? ROUTE_COLORS.safest
+      : activeRoute?.mode === 'fastest'
+        ? ROUTE_COLORS.fastest
+        : ROUTE_COLORS.balanced;
+
+  // Dark casing drawn under a route so the bright core stays legible
+  // over heatmap cells, trajectories and the ocean basemap.
+  const casing = { color: '#04101f', opacity: 0.9 } as const;
 
   return (
     <div className="relative h-full min-h-[420px] w-full bg-[#070d18] lg:min-h-0">
@@ -159,9 +173,9 @@ export function SIHMapView({
               key={`traj-${idx}`}
               positions={line}
               pathOptions={{
-                color: '#c98a96',
-                weight: 1,
-                opacity: 0.3,
+                color: '#e08a9b',
+                weight: 1.25,
+                opacity: 0.5,
               }}
             />
           ))}
@@ -189,23 +203,41 @@ export function SIHMapView({
           <>
             <Polyline
               positions={routeComparison.fastest.route}
-              pathOptions={{ color: '#d9a13b', weight: 2.5, opacity: 0.75, dashArray: '7 6' }}
+              pathOptions={{ ...casing, weight: 7 }}
+            />
+            <Polyline
+              positions={routeComparison.fastest.route}
+              pathOptions={{ color: ROUTE_COLORS.fastest, weight: 3.5, opacity: 1, dashArray: '8 6' }}
             />
             <Polyline
               positions={routeComparison.safest.route}
-              pathOptions={{ color: '#3faf7d', weight: 2.5, opacity: 0.75, dashArray: '2 5', lineCap: 'round' }}
+              pathOptions={{ ...casing, weight: 7 }}
+            />
+            <Polyline
+              positions={routeComparison.safest.route}
+              pathOptions={{ color: ROUTE_COLORS.safest, weight: 3.5, opacity: 1, dashArray: '2 6', lineCap: 'round' }}
             />
             <Polyline
               positions={routeComparison.balanced.route}
-              pathOptions={{ color: '#6aa9d6', weight: 3.5, opacity: 0.95 }}
+              pathOptions={{ ...casing, weight: 8 }}
+            />
+            <Polyline
+              positions={routeComparison.balanced.route}
+              pathOptions={{ color: ROUTE_COLORS.balanced, weight: 4.5, opacity: 1 }}
             />
           </>
         ) : (
           activeRoute && (
-            <Polyline
-              positions={activeRoute.route}
-              pathOptions={{ color: routeColor, weight: 3.5, opacity: 0.95 }}
-            />
+            <>
+              <Polyline
+                positions={activeRoute.route}
+                pathOptions={{ ...casing, weight: 8 }}
+              />
+              <Polyline
+                positions={activeRoute.route}
+                pathOptions={{ color: routeColor, weight: 4.5, opacity: 1 }}
+              />
+            </>
           )
         )}
 
@@ -259,7 +291,7 @@ export function SIHMapView({
         </div>
         <div className="mt-2 flex items-center gap-3 border-t border-[#1e2b45] pt-2">
           <span className="flex items-center gap-1.5 text-[11px] text-slate-300">
-            <span className="inline-block h-0 w-5 border-t-[3px] border-[#6aa9d6]" /> Route
+            <span className="inline-block h-0 w-5 border-t-[3px] border-[#38bdf8]" /> Route
           </span>
           {layers.predictedTrajectories && totalTracks > 0 && (
             <span className="flex items-center gap-1.5 text-[11px] text-slate-300">
