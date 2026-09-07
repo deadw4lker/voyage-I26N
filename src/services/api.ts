@@ -37,6 +37,7 @@ const DEFAULT_WEIGHTS: MCDMWeights = {
 let cachedGrid: GridCellData[][] | null = null;
 
 function demoStatus(): SystemStatus {
+  const synth = (layer: string, source: string) => ({ layer, live: false as const, source, updated: null });
   return {
     status: 'DEMO_SIMULATION',
     data_harmonized: true,
@@ -59,6 +60,16 @@ function demoStatus(): SystemStatus {
       { stage: 'MCDM Weighted Overlay', status: 'ACTIVE', latency_ms: 15, weights_count: 6 },
       { stage: 'Dynamic Risk Map', status: 'ACTIVE', latency_ms: 22, updated: 'Live' },
       { stage: 'Optimal A* Ship Route', status: 'ACTIVE', latency_ms: 35, algorithm: 'Risk-Aware A*' },
+    ],
+    data_health: [
+      synth('Sea ice', 'Synthetic (backend unreachable)'),
+      synth('Ocean currents', 'Synthetic (backend unreachable)'),
+      synth('Wind', 'Synthetic (backend unreachable)'),
+      synth('Waves', 'Synthetic (backend unreachable)'),
+      synth('Bathymetry', 'Synthetic (backend unreachable)'),
+      synth('Ice drift', 'Synthetic (backend unreachable)'),
+      synth('Icebergs', 'Synthetic seeds'),
+      synth('History', 'Synthetic climatology'),
     ],
   };
 }

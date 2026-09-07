@@ -174,7 +174,7 @@ export function SIHRightSidebar({
         </section>
 
         {/* System */}
-        <SystemPipelinePanel stages={systemStatus?.pipeline_stages || []} />
+        <SystemPipelinePanel stages={systemStatus?.pipeline_stages || []} health={systemStatus?.data_health} />
       </div>
     </aside>
   );

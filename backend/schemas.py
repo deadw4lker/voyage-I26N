@@ -107,3 +107,4 @@ class SystemStatusResponse(BaseModel):
     resolution_km: float
     data_sources: Dict[str, str]
     pipeline_stages: List[Dict[str, Any]]
+    data_health: List[Dict[str, Any]] = []

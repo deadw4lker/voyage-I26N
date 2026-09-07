@@ -56,6 +56,28 @@ docker build -f backend/Dockerfile -t voyage-backend .
 docker run -p 8000:8000 voyage-backend
 ```
 
+## Data: live feeds with synthetic fallback
+
+The backend fuses **real public observations** (no API keys) onto the 9 km ops
+grid at startup, in parallel (~3 s). Every layer degrades per-cell to synthetic
+values when its source is down, and `/api/system-status` reports honest
+LIVE vs SYNTHETIC health per layer (shown under System → Details in the UI).
+
+| Layer | Live source | Fallback |
+|---|---|---|
+| Sea ice | NOAA OISST v2.1 NRT (ERDDAP, daily) | synthetic concentration |
+| Wind | Open-Meteo NWP, GFS/ICON 10 m | synthetic katabatic field |
+| Waves | Open-Meteo marine (CMEMS-forced) | synthetic, ice-attenuated |
+| Currents | Open-Meteo marine (CMEMS Global Ocean) | synthetic ACC field |
+| Bathymetry | ETOPO relief (ERDDAP, 30-day cache) | synthetic shelf profile |
+| Ice drift | derived live: 0.8·current + 0.02·wind | synthetic drift |
+| Icebergs | synthetic seeds, **drift sampled live** | static drift |
+
+No reliable keyless public feed exists for live iceberg positions (BYU/NIC
+pages are not machine-readable), so berg seeds stay synthetic while their
+advection forcing is real. `USE_LIVE_DATA=0` forces full synthetic.
+Live responses are cached under `backend/data_cache/` (3 h NWP, 24 h OISST).
+
 ## Backend API (FastAPI, :8000)
 
 | Method | Path | Purpose |

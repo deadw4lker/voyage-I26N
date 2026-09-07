@@ -103,6 +103,13 @@ export interface PipelineStage {
   algorithm?: string;
 }
 
+export interface DataHealth {
+  layer: string;
+  live: boolean;
+  source: string;
+  updated: string | null;
+}
+
 export interface SystemStatus {
   status: string;
   data_harmonized: boolean;
@@ -110,6 +117,7 @@ export interface SystemStatus {
   resolution_km: number;
   data_sources: Record<string, string>;
   pipeline_stages: PipelineStage[];
+  data_health?: DataHealth[];
 }
 
 export interface DataLayersState {

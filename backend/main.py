@@ -14,6 +14,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 try:
     from backend.data_providers.synthetic_provider import SyntheticAntarcticDataProvider
+    from backend.data_providers.realtime.hybrid import HybridAntarcticDataProvider
     from backend.models.monte_carlo import aggregate_multi_iceberg_probabilities
     from backend.models.risk_engine import compute_grid_risk_map
     from backend.models.router import calculate_route
@@ -24,6 +25,7 @@ try:
     )
 except ImportError:  # running from inside backend/
     from data_providers.synthetic_provider import SyntheticAntarcticDataProvider
+    from data_providers.realtime.hybrid import HybridAntarcticDataProvider
     from models.monte_carlo import aggregate_multi_iceberg_probabilities
     from models.risk_engine import compute_grid_risk_map
     from models.router import calculate_route
@@ -53,11 +55,20 @@ app.add_middleware(
 )
 
 # Global state singleton for prototype demonstration.
+# Hybrid provider fuses live public feeds (OISST ice, ETOPO depth, Open-Meteo
+# wind/waves/currents) onto the grid; any failed layer falls back to synthetic
+# so the demo survives upstream outages. USE_LIVE_DATA=0 forces full synthetic.
+try:
+    data_provider = HybridAntarcticDataProvider(rows=25, cols=35, seed=42, live=True)
+    live_layers = sum(1 for h in data_provider.layer_health() if h['live'])
+    print(f'[backend] live layers: {live_layers} ({", ".join(h["layer"] for h in data_provider.layer_health() if h["live"]) or "none — full synthetic"})')
+except Exception as e:
+    print(f'[backend] hybrid provider failed, full synthetic fallback: {e}')
+    data_provider = SyntheticAntarcticDataProvider(rows=25, cols=35, seed=42)
 # Heavy Monte Carlo warm-up runs once at startup with a reduced ensemble so
 # `uvicorn` boots fast; full-fidelity runs happen on demand via /api/predict-trajectory.
 BOOT_SIMS = int(os.environ.get("BOOT_SIMS", "80"))
 
-data_provider = SyntheticAntarcticDataProvider(rows=25, cols=35, seed=42)
 current_weights = MCDMWeights()
 tracked_icebergs = data_provider.get_initial_icebergs()
 
@@ -91,18 +102,27 @@ def health():
 @app.get("/api/system-status", response_model=SystemStatusResponse)
 def get_system_status():
     rows, cols = data_provider.get_grid_dimensions()
+    health = data_provider.layer_health() if hasattr(data_provider, 'layer_health') else []
+    live_by_layer = {h['layer']: h for h in health}
+
+    def src(label: str, fallback: str) -> str:
+        h = live_by_layer.get(label)
+        if h and h['live']:
+            return f"{h['source']} (LIVE{', ' + h['updated'] if h.get('updated') else ''})"
+        return fallback
+
     return SystemStatusResponse(
         status="OPERATIONAL",
         data_harmonized=True,
         grid_cells_count=rows * cols,
         resolution_km=9.0,
         data_sources={
-            "sea_ice": "Copernicus Marine OSI-SAF (Harmonized)",
-            "ocean_currents": "Copernicus Global Ocean Physics Analysis",
-            "weather_wind": "ERA5 Atmospheric Reanalysis",
-            "waves": "Copernicus Wave Spectra",
-            "historical_icebergs": "NIC Antarctic Iceberg Database & Sentinel-1 SAR",
-            "bathymetry": "IBCSO v2.0 BedMachine Antarctica"
+            "sea_ice": src('Sea ice', "Synthetic (Copernicus OSI-SAF schema)"),
+            "ocean_currents": src('Ocean currents', "Synthetic (Copernicus Physics schema)"),
+            "weather_wind": src('Wind', "Synthetic (ERA5 schema)"),
+            "waves": src('Waves', "Synthetic (Copernicus Waves schema)"),
+            "historical_icebergs": "Synthetic climatology + live-forced drift",
+            "bathymetry": src('Bathymetry', "Synthetic (IBCSO schema)")
         },
         pipeline_stages=[
             {"stage": "Data Ingestion", "status": "ACTIVE", "latency_ms": 12, "records": 6},
@@ -113,7 +133,8 @@ def get_system_status():
             {"stage": "MCDM Weighted Overlay", "status": "ACTIVE", "latency_ms": 15, "weights_count": 6},
             {"stage": "Dynamic Risk Map", "status": "ACTIVE", "latency_ms": 22, "updated": "Live"},
             {"stage": "Optimal A* Ship Route", "status": "ACTIVE", "latency_ms": 35, "algorithm": "Risk-Aware A*"}
-        ]
+        ],
+        data_health=health,
     )
 
 
