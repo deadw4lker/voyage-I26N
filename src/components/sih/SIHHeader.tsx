@@ -6,8 +6,6 @@ interface SIHHeaderProps {
   onRunSimulation: () => void;
   onCompareRoutes: () => void;
   isLoading: boolean;
-  activePreset: string;
-  onPresetSelect: (preset: string) => void;
   view: OpsView;
   onViewChange: (view: OpsView) => void;
   alertCount: number;
@@ -17,8 +15,6 @@ export function SIHHeader({
   onRunSimulation,
   onCompareRoutes,
   isLoading,
-  activePreset,
-  onPresetSelect,
   view,
   onViewChange,
   alertCount,
@@ -73,31 +69,8 @@ export function SIHHeader({
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <div
-            role="tablist"
-            aria-label="Scenario"
-            className="flex items-center gap-0.5 rounded-lg border border-[#24344f] bg-[#0a1222] p-0.5"
-          >
-            {['Prydz Bay Patrol', 'Bharati Supply', 'Severe Pack Ice'].map((preset) => (
-              <button
-                key={preset}
-                role="tab"
-                aria-selected={activePreset === preset}
-                onClick={() => onPresetSelect(preset)}
-                className={`whitespace-nowrap rounded-md px-2.5 py-1.5 text-[12px] font-medium transition-colors ${
-                  activePreset === preset
-                    ? 'bg-[#1c2f4f] text-slate-100 shadow-sm'
-                    : 'text-[#8b98ad] hover:text-slate-200'
-                }`}
-              >
-                {preset}
-              </button>
-            ))}
-          </div>
-
-          <div className="flex items-center gap-2">
-            <button
-              onClick={onCompareRoutes}
+          <button
+            onClick={onCompareRoutes}
               disabled={isLoading}
               className="flex items-center gap-1.5 rounded-lg border border-[#2a3c5c] bg-transparent px-3 py-1.5 text-[12.5px] font-medium text-slate-200 transition-colors hover:border-[#3a4f75] hover:bg-[#13203a] disabled:opacity-50"
             >
@@ -117,7 +90,6 @@ export function SIHHeader({
               )}
               {isLoading ? 'Running…' : 'Run simulation'}
             </button>
-          </div>
         </div>
       </div>
     </header>

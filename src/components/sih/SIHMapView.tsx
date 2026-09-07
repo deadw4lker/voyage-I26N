@@ -69,8 +69,8 @@ function ComparisonRoutes({
               positions={comparison[key].route}
               pathOptions={{
                 color: colors[key],
-                weight: isTop ? 4.5 : 2.5,
-                opacity: isTop ? 1 : 0.35,
+                weight: isTop ? 4.5 : 3,
+                opacity: isTop ? 1 : 0.6,
                 ...(dash ? { dashArray: dash } : {}),
                 ...(key === 'safest' ? { lineCap: 'round' as const } : {}),
               }}
@@ -145,9 +145,9 @@ export function SIHMapView({
   }, [layers.predictedTrajectories, monteCarloData]);
 
   const ROUTE_COLORS = {
-    balanced: '#38bdf8', // bright sky — recommended
-    fastest: '#fbbf24', // bright amber
-    safest: '#34d399', // bright emerald
+    balanced: '#38bdf8', // vivid sky — recommended
+    fastest: '#facc15', // vivid yellow
+    safest: '#4ade80', // vivid green
   } as const;
 
   const routeColor =
@@ -299,6 +299,21 @@ export function SIHMapView({
         </Marker>
       </MapContainer>
 
+      {/* Top-left route key during comparison — color to mode mapping */}
+      {showComparison && routeComparison && (
+        <div className="absolute left-4 top-4 z-[900] flex items-center gap-3 rounded-lg border border-[#2a3c5c] bg-[#0c1527]/95 px-3 py-2 shadow-xl backdrop-blur">
+          {(['fastest', 'balanced', 'safest'] as const).map((key) => (
+            <span key={key} className="flex items-center gap-1.5 text-[11px] text-slate-200">
+              <span
+                className="inline-block h-0 w-5 rounded-full border-t-[3px]"
+                style={{ borderColor: ROUTE_COLORS[key], opacity: key === emphasizedRoute ? 1 : 0.6 }}
+              />
+              <span className="capitalize">{key}</span>
+            </span>
+          ))}
+        </div>
+      )}
+
       {/* Bottom-left legend — compact, out of the way */}
       <div className="absolute bottom-4 left-4 z-[900] rounded-lg border border-[#2a3c5c] bg-[#0c1527]/95 px-3 py-2.5 shadow-xl backdrop-blur">
         <p className="text-[11px] font-medium text-[#8b98ad]">Risk</p>
@@ -322,7 +337,7 @@ export function SIHMapView({
           </span>
           {layers.predictedTrajectories && totalTracks > 0 && (
             <span className="flex items-center gap-1.5 text-[11px] text-slate-300">
-              <span className="inline-block h-0 w-5 border-t border-[#c98a96]" /> Drift ({totalTracks})
+              <span className="inline-block h-0 w-5 border-t border-[#e08a9b]" /> Drift ({totalTracks})
             </span>
           )}
           <span className="text-[11px] text-[#5c6b84]">Click a cell for detail</span>

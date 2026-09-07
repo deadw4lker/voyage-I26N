@@ -38,7 +38,6 @@ export default function App() {
   const [predictionHours, setPredictionHours] = useState<number>(72);
   const [routingMode, setRoutingMode] = useState<'fastest' | 'safest' | 'balanced'>('balanced');
   const [maxRisk, setMaxRisk] = useState<number>(0.70);
-  const [activePreset, setActivePreset] = useState<string>('Bharati Supply');
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isRouteUpdating, setIsRouteUpdating] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -273,25 +272,12 @@ export default function App() {
     setWeights(DEFAULT_WEIGHTS);
   };
 
-  const handlePresetSelect = (preset: string) => {
-    setActivePreset(preset);
-    if (preset === 'Severe Pack Ice') {
-      setWeights((prev) => ({ ...prev, sea_ice_risk: 0.45, iceberg_risk: 0.35 }));
-    } else if (preset === 'Prydz Bay Patrol') {
-      setRoutingMode('fastest');
-    } else {
-      setRoutingMode('balanced');
-    }
-  };
-
   return (
     <div className="flex flex-col h-dvh w-full bg-[#0a111e] text-[#dbe4f0] antialiased">
       <SIHHeader
         onRunSimulation={handleRunSimulation}
         onCompareRoutes={handleCompareRoutes}
         isLoading={isLoading}
-        activePreset={activePreset}
-        onPresetSelect={handlePresetSelect}
         view={view}
         onViewChange={setView}
         alertCount={unackedCount}
