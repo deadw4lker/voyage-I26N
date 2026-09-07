@@ -46,11 +46,13 @@ function ComparisonRoutes({
   emphasized,
   casing,
   colors,
+  onSelect,
 }: {
   comparison: RouteComparisonResponse;
   emphasized: RouteKey;
   casing: { color: string; opacity: number };
   colors: Record<RouteKey, string>;
+  onSelect?: (key: RouteKey) => void;
 }) {
   const order: { key: RouteKey; dash?: string }[] = [
     { key: 'fastest', dash: '8 6' },
@@ -61,6 +63,7 @@ function ComparisonRoutes({
     <>
       {order.map(({ key, dash }) => {
         const isTop = key === emphasized;
+        const handlers = onSelect ? { click: () => onSelect(key) } : {};
         return (
           <Fragment key={key}>
             {isTop && (
@@ -75,6 +78,7 @@ function ComparisonRoutes({
                 ...(dash ? { dashArray: dash } : {}),
                 ...(key === 'safest' ? { lineCap: 'round' as const } : {}),
               }}
+              eventHandlers={handlers}
             />
           </Fragment>
         );
@@ -90,12 +94,12 @@ interface SIHMapViewProps {
   monteCarloData: MonteCarloResponse | null;
   activeRoute: RouteResponse | null;
   routeComparison: RouteComparisonResponse | null;
-  showComparison: boolean;
   startPos: [number, number];
   destPos: [number, number];
   startLabel?: string;
   destLabel?: string;
   emphasizedRoute?: 'fastest' | 'safest' | 'balanced' | null;
+  onRouteSelect?: (key: 'fastest' | 'safest' | 'balanced') => void;
 }
 
 export function SIHMapView({
@@ -105,12 +109,12 @@ export function SIHMapView({
   monteCarloData,
   activeRoute,
   routeComparison,
-  showComparison,
   startPos,
   destPos,
   startLabel = 'RV Bharati Explorer',
   destLabel = 'Bharati Station',
   emphasizedRoute = null,
+  onRouteSelect,
 }: SIHMapViewProps) {
   const [selectedCell, setSelectedCell] = useState<GridCellData | null>(null);
 
@@ -250,12 +254,13 @@ export function SIHMapView({
               ))
           )}
 
-        {showComparison && routeComparison ? (
+        {routeComparison ? (
           <ComparisonRoutes
             comparison={routeComparison}
             emphasized={emphasizedRoute ?? 'balanced'}
             casing={casing}
             colors={ROUTE_COLORS}
+            onSelect={onRouteSelect}
           />
         ) : (
           activeRoute && (
@@ -303,8 +308,8 @@ export function SIHMapView({
         </Marker>
       </MapContainer>
 
-      {/* Top-left route key during comparison — color to mode mapping */}
-      {showComparison && routeComparison && (
+      {/* Top-left route key — color to mode mapping */}
+      {routeComparison && (
         <div className="absolute left-4 top-4 z-[900] flex items-center gap-3 rounded-lg border border-[#333333] bg-black/95 px-3 py-2 shadow-xl backdrop-blur">
           {(['fastest', 'balanced', 'safest'] as const).map((key) => (
             <span key={key} className="flex items-center gap-1.5 text-[11px] text-slate-200">

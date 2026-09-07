@@ -5,7 +5,7 @@ import type {
 } from './types/sih';
 import {
   fetchSystemStatus, fetchGridRiskMap, fetchIcebergs, updateWeights,
-  predictTrajectory, calculateRoute, compareRoutes, isDemoFallback,
+  predictTrajectory, compareRoutes, isDemoFallback,
 } from './services/api';
 import { VESSEL_POS, findPlace } from './lib/places';
 import { buildAlerts } from './lib/alerts';
@@ -75,7 +75,6 @@ export default function App() {
   const [monteCarloData, setMonteCarloData] = useState<MonteCarloResponse | null>(null);
   const [activeRoute, setActiveRoute] = useState<RouteResponse | null>(null);
   const [routeComparison, setRouteComparison] = useState<RouteComparisonResponse | null>(null);
-  const [showComparison, setShowComparison] = useState<boolean>(false);
   const [selectedOption, setSelectedOption] = useState<RouteOptionKey>('balanced');
   const [systemStatus, setSystemStatus] = useState<SystemStatus | null>(null);
   const [acknowledged, setAcknowledged] = useState<Set<string>>(new Set());
@@ -84,9 +83,33 @@ export default function App() {
   const routeReqId = useRef(0);
   const simReqId = useRef(0);
 
+  // Mirror of the focused route option for async callbacks (avoids refetch loops).
+  const selectedRef = useRef<RouteOptionKey>('balanced');
+  selectedRef.current = selectedOption;
+
   const syncDemoFlag = useCallback(() => {
     if (isDemoFallback()) setDemoMode(true);
   }, []);
+
+  // Fetch all three routes and focus the selected option's telemetry.
+  // Returns the comparison (or null) so callers can chain further updates.
+  const refreshComparison = useCallback(async (): Promise<RouteComparisonResponse | null> => {
+    const myId = ++routeReqId.current;
+    setIsRouteUpdating(true);
+    try {
+      const compRes = await compareRoutes(startPos, destPos, maxRisk, 14.0);
+      if (myId !== routeReqId.current) return null;
+      setRouteComparison(compRes);
+      setActiveRoute(compRes[selectedRef.current]);
+      syncDemoFlag();
+      return compRes;
+    } catch (err) {
+      console.error('Route comparison failed:', err);
+      return null;
+    } finally {
+      if (myId === routeReqId.current) setIsRouteUpdating(false);
+    }
+  }, [startPos, destPos, maxRisk, syncDemoFlag]);
 
   const alerts = useMemo(
     () => buildAlerts({ icebergs, riskGrid, activeRoute, monteCarlo: monteCarloData }),
@@ -125,11 +148,7 @@ export default function App() {
         if (cancelled) return;
         setRiskGrid(gridAfterMc);
 
-        const myId = ++routeReqId.current;
-        const routeRes = await calculateRoute(VESSEL_POS, [-69.4, 76.2], 'balanced', 0.70, 14.0);
-        if (cancelled || myId !== routeReqId.current) return;
-        setActiveRoute(routeRes);
-        syncDemoFlag();
+        await refreshComparison();
       } catch (err) {
         console.error('Init failed:', err);
         if (!cancelled) setError('Could not reach the simulation backend. Showing demo data instead — start the backend for live results.');
@@ -142,32 +161,23 @@ export default function App() {
     }
     initDashboard();
     return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [syncDemoFlag]);
 
-  // Debounced route recalc on mode / risk / endpoints change.
-  const debouncedMode = useDebouncedValue(routingMode, 350);
+  // Debounced route recalc on risk / endpoints change — all three routes reload.
   const debouncedRisk = useDebouncedValue(maxRisk, 350);
   useEffect(() => {
     if (riskGrid.length === 0) return;
-    let cancelled = false;
-    async function updateRoute() {
-      const myId = ++routeReqId.current;
-      setIsRouteUpdating(true);
-      try {
-        const routeRes = await calculateRoute(startPos, destPos, debouncedMode, debouncedRisk, 14.0);
-        if (cancelled || myId !== routeReqId.current) return;
-        setActiveRoute(routeRes);
-        syncDemoFlag();
-      } catch (err) {
-        console.error('Route update failed:', err);
-      } finally {
-        if (!cancelled && myId === routeReqId.current) setIsRouteUpdating(false);
-      }
-    }
-    updateRoute();
-    return () => { cancelled = true; };
+    refreshComparison();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [debouncedMode, debouncedRisk, startPos[0], startPos[1], destPos[0], destPos[1], riskGrid.length, syncDemoFlag]);
+  }, [debouncedRisk, startPos[0], startPos[1], destPos[0], destPos[1], riskGrid.length]);
+
+  // Routing preference focuses the matching route (no refetch needed).
+  useEffect(() => {
+    setSelectedOption(routingMode);
+    if (routeComparison) setActiveRoute(routeComparison[routingMode]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [routingMode]);
 
   // Debounced MCDM weight recompute — one grid+route refresh per pause, not per tick.
   const debouncedWeights = useDebouncedValue(weights, 500);
@@ -183,20 +193,13 @@ export default function App() {
         const gridRes = await updateWeights(debouncedWeights);
         if (cancelled || myId !== routeReqId.current) return;
         setRiskGrid(gridRes);
-        const routeRes = await calculateRoute(startPos, destPos, routingMode, maxRisk, 14.0);
-        if (cancelled || myId !== routeReqId.current) return;
-        setActiveRoute(routeRes);
-        if (showComparison) {
-          const compRes = await compareRoutes(startPos, destPos, maxRisk, 14.0);
-          if (cancelled || myId !== routeReqId.current) return;
-          setRouteComparison(compRes);
-        }
         syncDemoFlag();
       } catch (err) {
         console.error('Weight update failed:', err);
-      } finally {
         if (!cancelled && myId === routeReqId.current) setIsRouteUpdating(false);
+        return;
       }
+      await refreshComparison();
     }
     applyWeights();
     return () => { cancelled = true; };
@@ -220,15 +223,7 @@ export default function App() {
       if (myId !== simReqId.current) return;
       setRiskGrid(gridRes);
 
-      const routeRes = await calculateRoute(startPos, destPos, routingMode, maxRisk, 14.0);
-      if (myId !== simReqId.current) return;
-      setActiveRoute(routeRes);
-
-      if (showComparison) {
-        const compRes = await compareRoutes(startPos, destPos, maxRisk, 14.0);
-        if (myId !== simReqId.current) return;
-        setRouteComparison(compRes);
-      }
+      await refreshComparison();
       syncDemoFlag();
     } catch (err) {
       console.error('Simulation failed:', err);
@@ -242,13 +237,13 @@ export default function App() {
     setIsLoading(true);
     setError(null);
     try {
-      const compRes = await compareRoutes(startPos, destPos, maxRisk, 14.0);
-      setRouteComparison(compRes);
-      setShowComparison(true);
-      // Focus the recommended option and mirror it into telemetry.
-      setSelectedOption('balanced');
-      setActiveRoute(compRes.balanced);
-      syncDemoFlag();
+      const compRes = await refreshComparison();
+      if (compRes) {
+        // Focus the recommended option and mirror it into telemetry.
+        setSelectedOption('balanced');
+        setRoutingMode('balanced');
+        setActiveRoute(compRes.balanced);
+      }
     } catch (err) {
       console.error('Compare failed:', err);
       setError('Route comparison failed. Please try again.');
@@ -335,12 +330,12 @@ export default function App() {
               monteCarloData={monteCarloData}
               activeRoute={activeRoute}
               routeComparison={routeComparison}
-              showComparison={showComparison}
               startPos={startPos}
               destPos={destPos}
               startLabel={startLabel}
               destLabel={destLabel}
-              emphasizedRoute={showComparison && routeComparison ? selectedOption : null}
+              emphasizedRoute={routeComparison ? selectedOption : null}
+              onRouteSelect={handleSelectOption}
             />
             {(isLoading || isRouteUpdating) && (
             <div className="absolute inset-0 z-[800] flex items-center justify-center bg-black/55 pointer-events-none">

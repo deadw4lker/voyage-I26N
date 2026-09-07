@@ -125,7 +125,7 @@ export function SIHRightSidebar({
         <section className="ops-card p-4">
           <h2 className="ops-section-title">Route options</h2>
           <p className="ops-section-sub mt-0.5">
-            {comparison ? 'Compare trade-offs before committing.' : 'Run Compare to see three alternatives side by side.'}
+            {comparison ? 'Click a route here or on the map to focus it.' : 'Calculating the three route options…'}
           </p>
 
           {comparison ? (
@@ -168,7 +168,7 @@ export function SIHRightSidebar({
             </div>
           ) : (
             <div className="mt-3 rounded-lg border border-dashed border-[#333333] px-3 py-4 text-center text-[12px] text-[#737373]">
-              Fastest, balanced and safest will appear here.
+              Fastest, balanced and safest are loading…
             </div>
           )}
         </section>
