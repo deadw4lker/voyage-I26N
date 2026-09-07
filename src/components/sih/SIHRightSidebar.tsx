@@ -1,6 +1,7 @@
-import { useState } from 'react';
 import type { RouteResponse, RouteComparisonResponse, IcebergData, SystemStatus } from '../../types/sih';
 import { SystemPipelinePanel } from './SystemPipelinePanel';
+
+export type RouteOptionKey = 'fastest' | 'safest' | 'balanced';
 
 interface SIHRightSidebarProps {
   activeRoute: RouteResponse | null;
@@ -9,6 +10,8 @@ interface SIHRightSidebarProps {
   predictionConfidence: number;
   uncertaintyRadiusKm: number;
   systemStatus: SystemStatus | null;
+  selectedOption: RouteOptionKey;
+  onSelectOption: (key: RouteOptionKey) => void;
 }
 
 function riskMeta(level: string) {
@@ -44,8 +47,9 @@ export function SIHRightSidebar({
   predictionConfidence,
   uncertaintyRadiusKm,
   systemStatus,
+  selectedOption,
+  onSelectOption,
 }: SIHRightSidebarProps) {
-  const [selectedOption, setSelectedOption] = useState<'fastest' | 'safest' | 'balanced'>('balanced');
   const highRiskCount = icebergs.filter((b) => b.risk_rating >= 60).length;
 
   const comparison = routeComparison
@@ -134,7 +138,7 @@ export function SIHRightSidebar({
                     key={opt.key}
                     role="radio"
                     aria-checked={selected}
-                    onClick={() => setSelectedOption(opt.key)}
+                    onClick={() => onSelectOption(opt.key)}
                     className={`w-full rounded-lg border px-3 py-2.5 text-left transition-colors ${
                       selected
                         ? 'border-[#3d6a94] bg-[#13233d]'

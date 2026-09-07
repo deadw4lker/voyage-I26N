@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, Fragment } from 'react';
 import { MapContainer, TileLayer, Rectangle, Polyline, Marker, Popup, Tooltip, CircleMarker } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -37,6 +37,51 @@ function bergIcon(risk: number) {
   });
 }
 
+type RouteKey = 'fastest' | 'safest' | 'balanced';
+
+/** Comparison overlay: the selected route renders full-strength, the other two dim. */
+function ComparisonRoutes({
+  comparison,
+  emphasized,
+  casing,
+  colors,
+}: {
+  comparison: RouteComparisonResponse;
+  emphasized: RouteKey;
+  casing: { color: string; opacity: number };
+  colors: Record<RouteKey, string>;
+}) {
+  const order: { key: RouteKey; dash?: string }[] = [
+    { key: 'fastest', dash: '8 6' },
+    { key: 'safest', dash: '2 6' },
+    { key: 'balanced' },
+  ];
+  return (
+    <>
+      {order.map(({ key, dash }) => {
+        const isTop = key === emphasized;
+        return (
+          <Fragment key={key}>
+            {isTop && (
+              <Polyline positions={comparison[key].route} pathOptions={{ ...casing, weight: 8 }} />
+            )}
+            <Polyline
+              positions={comparison[key].route}
+              pathOptions={{
+                color: colors[key],
+                weight: isTop ? 4.5 : 2.5,
+                opacity: isTop ? 1 : 0.35,
+                ...(dash ? { dashArray: dash } : {}),
+                ...(key === 'safest' ? { lineCap: 'round' as const } : {}),
+              }}
+            />
+          </Fragment>
+        );
+      })}
+    </>
+  );
+}
+
 interface SIHMapViewProps {
   riskGrid: GridCellData[][];
   layers: DataLayersState;
@@ -49,6 +94,7 @@ interface SIHMapViewProps {
   destPos: [number, number];
   startLabel?: string;
   destLabel?: string;
+  emphasizedRoute?: 'fastest' | 'safest' | 'balanced' | null;
 }
 
 export function SIHMapView({
@@ -63,6 +109,7 @@ export function SIHMapView({
   destPos,
   startLabel = 'RV Bharati Explorer',
   destLabel = 'Bharati Station',
+  emphasizedRoute = null,
 }: SIHMapViewProps) {
   const [selectedCell, setSelectedCell] = useState<GridCellData | null>(null);
 
@@ -200,32 +247,12 @@ export function SIHMapView({
           )}
 
         {showComparison && routeComparison ? (
-          <>
-            <Polyline
-              positions={routeComparison.fastest.route}
-              pathOptions={{ ...casing, weight: 7 }}
-            />
-            <Polyline
-              positions={routeComparison.fastest.route}
-              pathOptions={{ color: ROUTE_COLORS.fastest, weight: 3.5, opacity: 1, dashArray: '8 6' }}
-            />
-            <Polyline
-              positions={routeComparison.safest.route}
-              pathOptions={{ ...casing, weight: 7 }}
-            />
-            <Polyline
-              positions={routeComparison.safest.route}
-              pathOptions={{ color: ROUTE_COLORS.safest, weight: 3.5, opacity: 1, dashArray: '2 6', lineCap: 'round' }}
-            />
-            <Polyline
-              positions={routeComparison.balanced.route}
-              pathOptions={{ ...casing, weight: 8 }}
-            />
-            <Polyline
-              positions={routeComparison.balanced.route}
-              pathOptions={{ color: ROUTE_COLORS.balanced, weight: 4.5, opacity: 1 }}
-            />
-          </>
+          <ComparisonRoutes
+            comparison={routeComparison}
+            emphasized={emphasizedRoute ?? 'balanced'}
+            casing={casing}
+            colors={ROUTE_COLORS}
+          />
         ) : (
           activeRoute && (
             <>

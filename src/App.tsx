@@ -11,8 +11,7 @@ import { VESSEL_POS, findPlace } from './lib/places';
 import { buildAlerts } from './lib/alerts';
 import { SIHHeader, type OpsView } from './components/sih/SIHHeader';
 import { SIHLeftSidebar, type OriginMode } from './components/sih/SIHLeftSidebar';
-import { SIHRightSidebar } from './components/sih/SIHRightSidebar';
-import { SIHMapView } from './components/sih/SIHMapView';
+import { SIHRightSidebar, type RouteOptionKey } from './components/sih/SIHRightSidebar';import { SIHMapView } from './components/sih/SIHMapView';
 import { AlertsView } from './components/sih/AlertsView';
 
 const DEFAULT_WEIGHTS: MCDMWeights = {
@@ -78,6 +77,7 @@ export default function App() {
   const [activeRoute, setActiveRoute] = useState<RouteResponse | null>(null);
   const [routeComparison, setRouteComparison] = useState<RouteComparisonResponse | null>(null);
   const [showComparison, setShowComparison] = useState<boolean>(false);
+  const [selectedOption, setSelectedOption] = useState<RouteOptionKey>('balanced');
   const [systemStatus, setSystemStatus] = useState<SystemStatus | null>(null);
   const [acknowledged, setAcknowledged] = useState<Set<string>>(new Set());
 
@@ -246,6 +246,9 @@ export default function App() {
       const compRes = await compareRoutes(startPos, destPos, maxRisk, 14.0);
       setRouteComparison(compRes);
       setShowComparison(true);
+      // Focus the recommended option and mirror it into telemetry.
+      setSelectedOption('balanced');
+      setActiveRoute(compRes.balanced);
       syncDemoFlag();
     } catch (err) {
       console.error('Compare failed:', err);
@@ -253,6 +256,12 @@ export default function App() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleSelectOption = (key: RouteOptionKey) => {
+    setSelectedOption(key);
+    // Mirror the chosen route into the telemetry card so numbers match the map.
+    if (routeComparison) setActiveRoute(routeComparison[key]);
   };
 
   // Slider moves update instantly locally; backend sync happens via debounce above.
@@ -345,6 +354,7 @@ export default function App() {
               destPos={destPos}
               startLabel={startLabel}
               destLabel={destLabel}
+              emphasizedRoute={showComparison && routeComparison ? selectedOption : null}
             />
             {(isLoading || isRouteUpdating) && (
               <div className="absolute inset-0 z-[800] flex items-center justify-center bg-[#070d18]/55 pointer-events-none">
@@ -363,6 +373,8 @@ export default function App() {
             predictionConfidence={monteCarloData?.confidence || 85}
             uncertaintyRadiusKm={monteCarloData?.uncertainty_radius_km || 14.2}
             systemStatus={systemStatus}
+            selectedOption={selectedOption}
+            onSelectOption={handleSelectOption}
           />
         </div>
       )}
