@@ -34,7 +34,7 @@ function StatRow({ label, value, sub }: { label: string; value: string; sub?: st
       <span className="text-[12.5px] text-[#8b98ad]">{label}</span>
       <span className="text-right">
         <span className="tabular block text-[13px] font-medium text-slate-100">{value}</span>
-        {sub && <span className="block text-[11px] text-[#5c6b84]">{sub}</span>}
+        {sub && <span className="block text-[11px] text-[#737373]">{sub}</span>}
       </span>
     </div>
   );
@@ -63,7 +63,7 @@ export function SIHRightSidebar({
   const activeMeta = activeRoute ? riskMeta(activeRoute.risk_level) : null;
 
   return (
-    <aside className="w-full shrink-0 border-t border-[#1e2b45] bg-[#0c1527] lg:w-[320px] lg:border-t-0 lg:border-l lg:overflow-y-auto lg:min-h-0">
+    <aside className="w-full shrink-0 border-t border-[#262626] bg-[#090909] lg:w-[320px] lg:border-t-0 lg:border-l lg:overflow-y-auto lg:min-h-0">
       <div className="space-y-3 p-3.5">
         {/* Active route */}
         <section className="ops-card p-4">
@@ -83,16 +83,16 @@ export function SIHRightSidebar({
                 <span className="tabular text-[26px] font-semibold tracking-tight text-slate-50">
                   {(activeRoute.risk_score * 100).toFixed(0)}
                 </span>
-                <span className="text-[12px] text-[#5c6b84]">risk score / 100 · {activeRoute.mode}</span>
+                <span className="text-[12px] text-[#737373]">risk score / 100 · {activeRoute.mode}</span>
               </div>
-              <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[#1c2a46]">
+              <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[#242424]">
                 <div
-                  className="h-full rounded-full bg-[#6aa9d6]"
+                  className="h-full rounded-full bg-[#a3a3a3]"
                   style={{ width: `${Math.min(100, Math.max(2, activeRoute.risk_score * 100))}%` }}
                 />
               </div>
 
-              <div className="mt-2 divide-y divide-[#182441]">
+              <div className="mt-2 divide-y divide-[#1e1e1e]">
                 <StatRow label="Distance" value={`${activeRoute.distance_km.toFixed(0)} km`} />
                 <StatRow label="Travel time" value={`${activeRoute.estimated_time_hours.toFixed(1)} h`} sub={`at 14 kn`} />
                 <StatRow label="Safety margin" value={`${activeRoute.safety_margin_percent.toFixed(0)}%`} />
@@ -100,9 +100,9 @@ export function SIHRightSidebar({
               </div>
             </div>
           ) : (
-            <div className="mt-3 rounded-lg border border-dashed border-[#2a3c5c] px-3 py-5 text-center">
+            <div className="mt-3 rounded-lg border border-dashed border-[#333333] px-3 py-5 text-center">
               <p className="text-[13px] text-slate-200">No route yet</p>
-              <p className="mx-auto mt-1 max-w-[220px] text-[12px] leading-relaxed text-[#5c6b84]">
+              <p className="mx-auto mt-1 max-w-[220px] text-[12px] leading-relaxed text-[#737373]">
                 Run a simulation to calculate the safest passage to Bharati Station.
               </p>
             </div>
@@ -113,7 +113,7 @@ export function SIHRightSidebar({
         <section className="ops-card p-4">
           <h2 className="ops-section-title">Ice conditions</h2>
           <p className="ops-section-sub mt-0.5">Live iceberg tracking and forecast quality.</p>
-          <div className="mt-1 divide-y divide-[#182441]">
+          <div className="mt-1 divide-y divide-[#1e1e1e]">
             <StatRow label="Tracked bergs" value={`${icebergs.length}`} />
             <StatRow label="High risk" value={`${highRiskCount}`} sub={highRiskCount > 0 ? 'needs attention' : 'none critical'} />
             <StatRow label="Forecast confidence" value={`${predictionConfidence.toFixed(0)}%`} />
@@ -141,8 +141,8 @@ export function SIHRightSidebar({
                     onClick={() => onSelectOption(opt.key)}
                     className={`w-full rounded-lg border px-3 py-2.5 text-left transition-colors ${
                       selected
-                        ? 'border-[#3d6a94] bg-[#13233d]'
-                        : 'border-[#1e2b45] bg-[#0a1222] hover:border-[#2a3c5c]'
+                        ? 'border-[#525252] bg-[#1c1c1c]'
+                        : 'border-[#262626] bg-[#141414] hover:border-[#333333]'
                     }`}
                   >
                     <span className="flex items-center justify-between gap-2">
@@ -150,7 +150,7 @@ export function SIHRightSidebar({
                         <span className={`h-2 w-2 rounded-full ${m.dot}`} />
                         <span className="text-[13px] font-medium text-slate-100">{opt.label}</span>
                         {opt.key === 'balanced' && (
-                          <span className="rounded-full bg-[#1c2f4f] px-1.5 py-px text-[10.5px] font-medium text-[#8fb8d8]">
+                          <span className="rounded-full bg-[#2a2a2a] px-1.5 py-px text-[10.5px] font-medium text-[#c9c9c9]">
                             Recommended
                           </span>
                         )}
@@ -167,7 +167,7 @@ export function SIHRightSidebar({
               })}
             </div>
           ) : (
-            <div className="mt-3 rounded-lg border border-dashed border-[#2a3c5c] px-3 py-4 text-center text-[12px] text-[#5c6b84]">
+            <div className="mt-3 rounded-lg border border-dashed border-[#333333] px-3 py-4 text-center text-[12px] text-[#737373]">
               Fastest, balanced and safest will appear here.
             </div>
           )}

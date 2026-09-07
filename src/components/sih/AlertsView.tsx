@@ -23,7 +23,7 @@ function severityStyle(sev: AlertSeverity) {
     case 'warning':
       return { dot: 'bg-amber-300', pill: 'border-amber-900/60 bg-amber-950/30 text-amber-100', label: 'Warning' };
     default:
-      return { dot: 'bg-sky-400', pill: 'border-[#2a3c5c] bg-[#0f1c33] text-[#8fb8d8]', label: 'Info' };
+      return { dot: 'bg-sky-400', pill: 'border-[#333333] bg-[#141414] text-[#c9c9c9]', label: 'Info' };
   }
 }
 
@@ -44,13 +44,13 @@ export function AlertsView({ alerts, acknowledged, onAcknowledge, onAcknowledgeA
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <div className="flex items-center gap-0.5 rounded-lg border border-[#24344f] bg-[#0a1222] p-0.5">
+          <div className="flex items-center gap-0.5 rounded-lg border border-[#2e2e2e] bg-[#141414] p-0.5">
             {FILTERS.map((f) => (
               <button
                 key={f.id}
                 onClick={() => setFilter(f.id)}
                 className={`rounded-md px-2.5 py-1.5 text-[12px] font-medium transition-colors ${
-                  filter === f.id ? 'bg-[#1c2f4f] text-slate-100' : 'text-[#8b98ad] hover:text-slate-200'
+                  filter === f.id ? 'bg-[#2a2a2a] text-slate-100' : 'text-[#8b98ad] hover:text-slate-200'
                 }`}
               >
                 {f.label}
@@ -60,9 +60,9 @@ export function AlertsView({ alerts, acknowledged, onAcknowledge, onAcknowledgeA
           {unacked > 0 && (
             <button
               onClick={onAcknowledgeAll}
-              className="flex items-center gap-1.5 rounded-lg border border-[#2a3c5c] px-3 py-1.5 text-[12.5px] font-medium text-slate-200 hover:border-[#3a4f75] hover:bg-[#13203a]"
+              className="flex items-center gap-1.5 rounded-lg border border-[#333333] px-3 py-1.5 text-[12.5px] font-medium text-slate-200 hover:border-[#404040] hover:bg-[#1c1c1c]"
             >
-              <CheckCheck className="h-3.5 w-3.5 text-[#8fb8d8]" />
+              <CheckCheck className="h-3.5 w-3.5 text-[#c9c9c9]" />
               Mark all read
             </button>
           )}
@@ -71,9 +71,9 @@ export function AlertsView({ alerts, acknowledged, onAcknowledge, onAcknowledgeA
 
       {visible.length === 0 ? (
         <div className="ops-card mt-4 px-4 py-12 text-center">
-          <BellRing className="mx-auto h-6 w-6 text-[#5c6b84]" />
+          <BellRing className="mx-auto h-6 w-6 text-[#737373]" />
           <p className="mt-2 text-[13.5px] font-medium text-slate-200">Nothing here</p>
-          <p className="mx-auto mt-1 max-w-[300px] text-[12.5px] text-[#5c6b84]">
+          <p className="mx-auto mt-1 max-w-[300px] text-[12.5px] text-[#737373]">
             {alerts.length === 0 ? 'The sector is quiet for now.' : 'No alerts match this filter.'}
           </p>
         </div>
@@ -96,12 +96,12 @@ export function AlertsView({ alerts, acknowledged, onAcknowledge, onAcknowledgeA
                     </span>
                   </div>
                   <p className="mt-1 text-[12.5px] leading-relaxed text-[#8b98ad]">{alert.detail}</p>
-                  <p className="tabular mt-1.5 text-[11px] text-[#5c6b84]">Source: {alert.source}</p>
+                  <p className="tabular mt-1.5 text-[11px] text-[#737373]">Source: {alert.source}</p>
                 </div>
                 {!acked && (
                   <button
                     onClick={() => onAcknowledge(alert.id)}
-                    className="shrink-0 rounded-md px-2 py-1 text-[12px] font-medium text-[#8b98ad] hover:bg-[#182441] hover:text-slate-200"
+                    className="shrink-0 rounded-md px-2 py-1 text-[12px] font-medium text-[#8b98ad] hover:bg-[#1e1e1e] hover:text-slate-200"
                   >
                     Acknowledge
                   </button>
@@ -112,7 +112,7 @@ export function AlertsView({ alerts, acknowledged, onAcknowledge, onAcknowledgeA
         </ul>
       )}
 
-      <p className="mt-4 text-[11.5px] leading-relaxed text-[#5c6b84]">
+      <p className="mt-4 text-[11.5px] leading-relaxed text-[#737373]">
         Simulation output for demonstration — not an operational warning system. Validate against
         official ice charts before navigation decisions.
       </p>

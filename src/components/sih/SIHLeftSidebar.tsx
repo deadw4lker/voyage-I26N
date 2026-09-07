@@ -24,7 +24,7 @@ interface SIHLeftSidebarProps {
 }
 
 const selectClass =
-  'w-full rounded-lg border border-[#22314e] bg-[#0a1222] px-2.5 py-2 text-[12.5px] text-slate-200 outline-none transition-colors hover:border-[#2a3c5c] focus:border-[#3d6a94] disabled:opacity-50';
+  'w-full rounded-lg border border-[#2b2b2b] bg-[#141414] px-2.5 py-2 text-[12.5px] text-slate-200 outline-none transition-colors hover:border-[#333333] focus:border-[#525252] disabled:opacity-50';
 
 export function SIHLeftSidebar({
   layers,
@@ -73,14 +73,14 @@ export function SIHLeftSidebar({
   };
 
   return (
-    <aside className="w-full shrink-0 border-b border-[#1e2b45] bg-[#0c1527] lg:w-[300px] lg:border-b-0 lg:border-r lg:overflow-y-auto lg:min-h-0">
+    <aside className="w-full shrink-0 border-b border-[#262626] bg-[#090909] lg:w-[300px] lg:border-b-0 lg:border-r lg:overflow-y-auto lg:min-h-0">
       <div className="space-y-3 p-3.5">
         {/* Route endpoints */}
         <section className="ops-card p-4">
           <h2 className="ops-section-title">Route endpoints</h2>
           <p className="ops-section-sub mt-0.5">Start from the vessel or any named place.</p>
 
-          <div className="mt-2.5 grid grid-cols-2 gap-1 rounded-lg border border-[#22314e] bg-[#0a1222] p-1">
+          <div className="mt-2.5 grid grid-cols-2 gap-1 rounded-lg border border-[#2b2b2b] bg-[#141414] p-1">
             {(['vessel', 'custom'] as const).map((m) => (
               <button
                 key={m}
@@ -88,7 +88,7 @@ export function SIHLeftSidebar({
                 aria-pressed={originMode === m}
                 className={`rounded-md py-1.5 text-[12.5px] capitalize transition-colors ${
                   originMode === m
-                    ? 'bg-[#1c2f4f] font-medium text-slate-100'
+                    ? 'bg-[#2a2a2a] font-medium text-slate-100'
                     : 'text-[#8b98ad] hover:text-slate-200'
                 }`}
               >
@@ -98,7 +98,7 @@ export function SIHLeftSidebar({
           </div>
 
           {originMode === 'vessel' ? (
-            <p className="tabular mt-2.5 rounded-lg bg-[#0a1222] px-3 py-2 text-[12px] text-[#8b98ad]">
+            <p className="tabular mt-2.5 rounded-lg bg-[#141414] px-3 py-2 text-[12px] text-[#8b98ad]">
               From {VESSEL_PLACE.name} · {Math.abs(VESSEL_PLACE.coords[0]).toFixed(2)}°S, {VESSEL_PLACE.coords[1].toFixed(2)}°E
             </p>
           ) : (
@@ -144,7 +144,7 @@ export function SIHLeftSidebar({
         <section className="ops-card p-4">
           <h2 className="ops-section-title">Map layers</h2>
           <p className="ops-section-sub mt-0.5">Choose what to overlay on the chart.</p>
-          <div className="mt-3 divide-y divide-[#182441]">
+          <div className="mt-3 divide-y divide-[#1e1e1e]">
             {layerItems.map((item) => {
               const on = layers[item.key];
               return (
@@ -158,11 +158,11 @@ export function SIHLeftSidebar({
                     <span className={`block truncate text-[13px] ${on ? 'text-slate-100' : 'text-[#8b98ad]'}`}>
                       {item.label}
                     </span>
-                    <span className="block text-[11.5px] text-[#5c6b84]">{item.hint}</span>
+                    <span className="block text-[11.5px] text-[#737373]">{item.hint}</span>
                   </span>
                   <span
                     className={`relative h-[18px] w-[32px] shrink-0 rounded-full transition-colors ${
-                      on ? 'bg-[#3d6a94]' : 'bg-[#22314e]'
+                      on ? 'bg-neutral-400' : 'bg-[#2b2b2b]'
                     }`}
                   >
                     <span
@@ -181,16 +181,16 @@ export function SIHLeftSidebar({
         <section className="ops-card p-4">
           <div className="flex items-baseline justify-between gap-2">
             <h2 className="ops-section-title">Forecast horizon</h2>
-            <span className="tabular text-[12px] font-medium text-[#8fb8d8]">+{predictionHours} h</span>
+            <span className="tabular text-[12px] font-medium text-[#c9c9c9]">+{predictionHours} h</span>
           </div>
-          <div className="mt-2.5 grid grid-cols-5 gap-1 rounded-lg border border-[#22314e] bg-[#0a1222] p-1">
+          <div className="mt-2.5 grid grid-cols-5 gap-1 rounded-lg border border-[#2b2b2b] bg-[#141414] p-1">
             {timeOptions.map((hours) => (
               <button
                 key={hours}
                 onClick={() => onPredictionHoursChange(hours)}
                 className={`rounded-md py-1.5 text-[12px] tabular transition-colors ${
                   predictionHours === hours
-                    ? 'bg-[#1c2f4f] font-medium text-slate-100'
+                    ? 'bg-[#2a2a2a] font-medium text-slate-100'
                     : 'text-[#8b98ad] hover:text-slate-200'
                 }`}
               >
@@ -199,10 +199,10 @@ export function SIHLeftSidebar({
             ))}
           </div>
 
-          <div className="my-4 border-t border-[#182441]" />
+          <div className="my-4 border-t border-[#1e1e1e]" />
 
           <h2 className="ops-section-title">Routing preference</h2>
-          <div className="mt-2.5 grid grid-cols-3 gap-1 rounded-lg border border-[#22314e] bg-[#0a1222] p-1">
+          <div className="mt-2.5 grid grid-cols-3 gap-1 rounded-lg border border-[#2b2b2b] bg-[#141414] p-1">
             {(['fastest', 'balanced', 'safest'] as const).map((mode) => (
               <button
                 key={mode}
@@ -210,7 +210,7 @@ export function SIHLeftSidebar({
                 aria-pressed={routingMode === mode}
                 className={`rounded-md py-1.5 text-[12.5px] capitalize transition-colors ${
                   routingMode === mode
-                    ? 'bg-[#1c2f4f] font-medium text-slate-100'
+                    ? 'bg-[#2a2a2a] font-medium text-slate-100'
                     : 'text-[#8b98ad] hover:text-slate-200'
                 }`}
               >
@@ -218,7 +218,7 @@ export function SIHLeftSidebar({
               </button>
             ))}
           </div>
-          <p className="mt-2 text-[12px] leading-relaxed text-[#5c6b84]">{modeHelp[routingMode]}</p>
+          <p className="mt-2 text-[12px] leading-relaxed text-[#737373]">{modeHelp[routingMode]}</p>
 
           <div className="mt-3 flex items-center justify-between">
             <label htmlFor="max-risk" className="text-[12.5px] text-slate-300">
@@ -238,7 +238,7 @@ export function SIHLeftSidebar({
             onChange={(e) => onMaxRiskChange(parseFloat(e.target.value))}
             className="ops-range mt-2"
           />
-          <div className="mt-1 flex justify-between text-[10.5px] text-[#5c6b84]">
+          <div className="mt-1 flex justify-between text-[10.5px] text-[#737373]">
             <span>Cautious</span>
             <span>Bold</span>
           </div>
@@ -253,7 +253,7 @@ export function SIHLeftSidebar({
             </div>
             <button
               onClick={onResetWeights}
-              className="rounded-md px-2 py-1 text-[12px] font-medium text-[#8b98ad] hover:bg-[#182441] hover:text-slate-200"
+              className="rounded-md px-2 py-1 text-[12px] font-medium text-[#8b98ad] hover:bg-[#1e1e1e] hover:text-slate-200"
             >
               Reset
             </button>

@@ -18,16 +18,16 @@
   --color-border: #e3e8ef;
   --color-border-strong: #cbd3df;
 
-  /* Refined ops-console tokens */
-  --color-ops-bg: #0a111e;
-  --color-ops-panel: #101a2e;
-  --color-ops-panel-2: #0c1527;
-  --color-ops-border: #1e2b45;
-  --color-ops-border-soft: #182441;
+  /* Ops console tokens — neutral black */
+  --color-ops-bg: #000000;
+  --color-ops-panel: #101010;
+  --color-ops-panel-2: #090909;
+  --color-ops-border: #262626;
+  --color-ops-border-soft: #1e1e1e;
   --color-ops-text: #dbe4f0;
   --color-ops-muted: #8b98ad;
-  --color-ops-faint: #5c6b84;
-  --color-ops-accent: #6aa9d6;
+  --color-ops-faint: #737373;
+  --color-ops-accent: #a3a3a3;
 
   --shadow-glow: 0 1px 2px rgba(16,24,40,.06);
   --radius-sm: 6px;
@@ -47,7 +47,7 @@
   }
 
   body {
-    background: #0a111e;
+    background: #000000;
     color: #dbe4f0;
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
     font-size: 13.5px;
@@ -57,18 +57,18 @@
   }
 
   ::selection {
-    background: #1e3a56;
+    background: #333333;
     color: #eaf2fa;
   }
 
   :focus-visible {
-    outline: 2px solid #6aa9d6;
+    outline: 2px solid #a3a3a3;
     outline-offset: 2px;
     border-radius: 4px;
   }
 
   a {
-    color: #6aa9d6;
+    color: #a3a3a3;
     text-decoration: none;
   }
 
@@ -90,7 +90,7 @@
   /* Quiet scrollbars */
   * {
     scrollbar-width: thin;
-    scrollbar-color: #24344f transparent;
+    scrollbar-color: #333333 transparent;
   }
   *::-webkit-scrollbar {
     width: 8px;
@@ -100,7 +100,7 @@
     background: transparent;
   }
   *::-webkit-scrollbar-thumb {
-    background-color: #24344f;
+    background-color: #333333;
     border-radius: 8px;
     border: 2px solid transparent;
     background-clip: content-box;
@@ -108,12 +108,12 @@
 
   /* Leaflet dark chrome overrides — one system tooltip/popup */
   .leaflet-container {
-    background: #070d18;
+    background: #000000;
     font-family: 'Inter', system-ui, sans-serif;
   }
   .leaflet-tooltip.ops-tip {
-    background: #0f1a2f;
-    border: 1px solid #2a3c5c;
+    background: #0d0d0d;
+    border: 1px solid #333333;
     color: #dbe4f0;
     border-radius: 8px;
     box-shadow: 0 8px 24px rgba(0,0,0,.45);
@@ -125,8 +125,8 @@
     display: none;
   }
   .leaflet-popup.ops-popup .leaflet-popup-content-wrapper {
-    background: #0f1a2f;
-    border: 1px solid #2a3c5c;
+    background: #0d0d0d;
+    border: 1px solid #333333;
     color: #dbe4f0;
     border-radius: 10px;
     box-shadow: 0 12px 32px rgba(0,0,0,.5);
@@ -137,8 +137,8 @@
     line-height: 1.5;
   }
   .leaflet-popup.ops-popup .leaflet-popup-tip {
-    background: #0f1a2f;
-    border: 1px solid #2a3c5c;
+    background: #0d0d0d;
+    border: 1px solid #333333;
   }
   .leaflet-popup.ops-popup a.leaflet-popup-close-button {
     color: #8b98ad;
@@ -227,8 +227,8 @@
 
   /* Ops console primitives */
   .ops-card {
-    background: #101a2e;
-    border: 1px solid #1e2b45;
+    background: #101010;
+    border: 1px solid #262626;
     border-radius: 10px;
   }
 
@@ -246,12 +246,12 @@
   }
 
   .ops-divider {
-    border-color: #1e2b45;
+    border-color: #262626;
   }
 
   input[type=range].ops-range {
     @apply appearance-none w-full h-1 rounded-full outline-none cursor-pointer;
-    background: #24344f;
+    background: #333333;
     height: 4px;
   }
 
@@ -261,14 +261,14 @@
     height: 14px;
     border-radius: 50%;
     background: #e6edf6;
-    border: 1px solid #3a4f75;
+    border: 1px solid #525252;
     box-shadow: 0 1px 4px rgba(0,0,0,.4);
     cursor: pointer;
   }
 
   input[type=range].ops-range::-webkit-slider-thumb:hover {
     background: #ffffff;
-    border-color: #6aa9d6;
+    border-color: #a3a3a3;
   }
 
   input[type=range].ops-range::-moz-range-thumb {
@@ -276,7 +276,7 @@
     height: 14px;
     border-radius: 50%;
     background: #e6edf6;
-    border: 1px solid #3a4f75;
+    border: 1px solid #525252;
     cursor: pointer;
   }
 
@@ -330,7 +330,7 @@
 @layer utilities {
   .scrollbar-thin {
     scrollbar-width: thin;
-    scrollbar-color: #24344f transparent;
+    scrollbar-color: #333333 transparent;
   }
 
   .scrollbar-thin::-webkit-scrollbar {
@@ -343,11 +343,11 @@
   }
 
   .scrollbar-thin::-webkit-scrollbar-thumb {
-    background-color: #24344f;
+    background-color: #333333;
     border-radius: 6px;
   }
 
   .scrollbar-thin::-webkit-scrollbar-thumb:hover {
-    background-color: #33465f;
+    background-color: #404040;
   }
 }

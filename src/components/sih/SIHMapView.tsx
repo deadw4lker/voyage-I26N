@@ -11,8 +11,8 @@ import { CellDetailsDrawer } from './CellDetailsDrawer';
 // Quiet, purpose-built markers — no emoji, no glow
 const shipIcon = L.divIcon({
   className: 'ops-ship-marker',
-  html: `<div style="background:#e8eef5; width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; border:1px solid rgba(10,17,30,.35); box-shadow:0 2px 8px rgba(0,0,0,.45);">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#0c1527" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l1.5 4h15L21 17"/><path d="M12 3v6"/><path d="M5 17l7-11 7 11"/></svg>
+  html: `<div style="background:#e8eef5; width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; border:1px solid rgba(0,0,0,.4); box-shadow:0 2px 8px rgba(0,0,0,.45);">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l1.5 4h15L21 17"/><path d="M12 3v6"/><path d="M5 17l7-11 7 11"/></svg>
          </div>`,
   iconSize: [28, 28],
   iconAnchor: [14, 14],
@@ -20,7 +20,7 @@ const shipIcon = L.divIcon({
 
 const destIcon = L.divIcon({
   className: 'ops-dest-marker',
-  html: `<div style="background:#0c1527; width:26px; height:26px; border-radius:8px; display:flex; align-items:center; justify-content:center; border:1px solid #e8eef5; box-shadow:0 2px 8px rgba(0,0,0,.45);">
+  html: `<div style="background:#000000; width:26px; height:26px; border-radius:8px; display:flex; align-items:center; justify-content:center; border:1px solid #e8eef5; box-shadow:0 2px 8px rgba(0,0,0,.45);">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#e8eef5" stroke-width="2.2" stroke-linecap="round"><path d="M12 21s-7-5.5-7-11a7 7 0 0 1 14 0c0 5.5-7 11-7 11z"/><circle cx="12" cy="10" r="2.4"/></svg>
          </div>`,
   iconSize: [26, 26],
@@ -159,10 +159,10 @@ export function SIHMapView({
 
   // Dark casing drawn under a route so the bright core stays legible
   // over heatmap cells, trajectories and the ocean basemap.
-  const casing = { color: '#04101f', opacity: 0.9 } as const;
+  const casing = { color: '#000000', opacity: 0.9 } as const;
 
   return (
-    <div className="relative h-full min-h-[420px] w-full bg-[#070d18] lg:min-h-0">
+    <div className="relative h-full min-h-[420px] w-full bg-black lg:min-h-0">
       <MapContainer
         center={[-67.0, 58.0]}
         zoom={6}
@@ -192,7 +192,7 @@ export function SIHMapView({
                 pathOptions={{
                   fillColor: getCellRiskColor(cell.risk_score),
                   fillOpacity: getCellOpacity(cell.risk_score),
-                  color: '#16233c',
+                  color: '#222222',
                   weight: 0.4,
                   opacity: 0.6,
                 }}
@@ -301,7 +301,7 @@ export function SIHMapView({
 
       {/* Top-left route key during comparison — color to mode mapping */}
       {showComparison && routeComparison && (
-        <div className="absolute left-4 top-4 z-[900] flex items-center gap-3 rounded-lg border border-[#2a3c5c] bg-[#0c1527]/95 px-3 py-2 shadow-xl backdrop-blur">
+        <div className="absolute left-4 top-4 z-[900] flex items-center gap-3 rounded-lg border border-[#333333] bg-black/95 px-3 py-2 shadow-xl backdrop-blur">
           {(['fastest', 'balanced', 'safest'] as const).map((key) => (
             <span key={key} className="flex items-center gap-1.5 text-[11px] text-slate-200">
               <span
@@ -315,7 +315,7 @@ export function SIHMapView({
       )}
 
       {/* Bottom-left legend — compact, out of the way */}
-      <div className="absolute bottom-4 left-4 z-[900] rounded-lg border border-[#2a3c5c] bg-[#0c1527]/95 px-3 py-2.5 shadow-xl backdrop-blur">
+      <div className="absolute bottom-4 left-4 z-[900] rounded-lg border border-[#333333] bg-black/95 px-3 py-2.5 shadow-xl backdrop-blur">
         <p className="text-[11px] font-medium text-[#8b98ad]">Risk</p>
         <div className="mt-1.5 flex items-center gap-2.5">
           {[
@@ -331,7 +331,7 @@ export function SIHMapView({
             </span>
           ))}
         </div>
-        <div className="mt-2 flex items-center gap-3 border-t border-[#1e2b45] pt-2">
+        <div className="mt-2 flex items-center gap-3 border-t border-[#262626] pt-2">
           <span className="flex items-center gap-1.5 text-[11px] text-slate-300">
             <span className="inline-block h-0 w-5 border-t-[3px] border-[#38bdf8]" /> Route
           </span>
@@ -340,7 +340,7 @@ export function SIHMapView({
               <span className="inline-block h-0 w-5 border-t border-[#e08a9b]" /> Drift ({totalTracks})
             </span>
           )}
-          <span className="text-[11px] text-[#5c6b84]">Click a cell for detail</span>
+          <span className="text-[11px] text-[#737373]">Click a cell for detail</span>
         </div>
       </div>
 

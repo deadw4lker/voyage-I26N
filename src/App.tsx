@@ -273,7 +273,7 @@ export default function App() {
   };
 
   return (
-    <div className="flex flex-col h-dvh w-full bg-[#0a111e] text-[#dbe4f0] antialiased">
+    <div className="flex flex-col h-dvh w-full bg-black text-[#dbe4f0] antialiased">
       <SIHHeader
         onRunSimulation={handleRunSimulation}
         onCompareRoutes={handleCompareRoutes}
@@ -285,7 +285,7 @@ export default function App() {
 
       {(error || demoMode) && (
         <div className={`flex items-center justify-center gap-2 border-b px-4 py-1.5 text-[12px] ${
-          error ? 'border-amber-900/50 bg-amber-950/40 text-amber-200' : 'border-[#1e2b45] bg-[#0c1527] text-[#8b98ad]'
+          error ? 'border-amber-900/50 bg-amber-950/40 text-amber-200' : 'border-[#262626] bg-[#090909] text-[#8b98ad]'
         }`}>
           <span>{error ?? 'Demo data mode — backend unreachable. Start it with `uvicorn backend.main:app --reload` for live simulation.'}</span>
           {error && (
@@ -327,7 +327,7 @@ export default function App() {
             onDestPlaceChange={setDestPlaceId}
           />
 
-          <main className="flex-1 relative min-h-[420px] lg:min-h-0 min-w-0 bg-[#070d18]">
+          <main className="flex-1 relative min-h-[420px] lg:min-h-0 min-w-0 bg-black">
             <SIHMapView
               riskGrid={riskGrid}
               layers={layers}
@@ -343,8 +343,8 @@ export default function App() {
               emphasizedRoute={showComparison && routeComparison ? selectedOption : null}
             />
             {(isLoading || isRouteUpdating) && (
-              <div className="absolute inset-0 z-[800] flex items-center justify-center bg-[#070d18]/55 pointer-events-none">
-                <div className="flex items-center gap-2.5 rounded-full border border-[#2a3c5c] bg-[#0f1a2f]/95 px-4 py-2 text-[12.5px] text-slate-200 shadow-xl">
+            <div className="absolute inset-0 z-[800] flex items-center justify-center bg-black/55 pointer-events-none">
+              <div className="flex items-center gap-2.5 rounded-full border border-[#333333] bg-[#0d0d0d]/95 px-4 py-2 text-[12.5px] text-slate-200 shadow-xl">
                   <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-slate-500 border-t-slate-100" />
                   {isLoading ? 'Updating risk map and route…' : 'Recalculating route…'}
                 </div>

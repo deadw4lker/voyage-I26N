@@ -29,7 +29,7 @@ export function CellDetailsDrawer({ cell, onClose }: CellDetailsDrawerProps) {
           : 'bg-emerald-400';
 
   return (
-    <div className="absolute bottom-4 right-4 z-[1000] w-[300px] max-w-[calc(100%-2rem)] rounded-xl border border-[#2a3c5c] bg-[#0f1a2f]/98 p-4 shadow-2xl backdrop-blur">
+    <div className="absolute bottom-4 right-4 z-[1000] w-[300px] max-w-[calc(100%-2rem)] rounded-xl border border-[#333333] bg-[#0d0d0d]/98 p-4 shadow-2xl backdrop-blur">
       <div className="flex items-start justify-between gap-2">
         <div>
           <p className="text-[13px] font-semibold text-slate-50">
@@ -42,13 +42,13 @@ export function CellDetailsDrawer({ cell, onClose }: CellDetailsDrawerProps) {
         <button
           onClick={onClose}
           aria-label="Close cell details"
-          className="rounded-md p-1 text-[#8b98ad] hover:bg-[#1c2f4f] hover:text-slate-100"
+          className="rounded-md p-1 text-[#8b98ad] hover:bg-[#2a2a2a] hover:text-slate-100"
         >
           <X className="h-4 w-4" />
         </button>
       </div>
 
-      <div className="mt-3 flex items-center gap-2 rounded-lg bg-[#0a1222] px-3 py-2.5">
+      <div className="mt-3 flex items-center gap-2 rounded-lg bg-[#141414] px-3 py-2.5">
         <span className={`h-2 w-2 rounded-full ${dot}`} />
         <span className="tabular text-[15px] font-semibold text-slate-50">
           {(cell.risk_score * 100).toFixed(0)}
@@ -56,7 +56,7 @@ export function CellDetailsDrawer({ cell, onClose }: CellDetailsDrawerProps) {
         <span className="text-[12px] text-[#8b98ad]">/ 100 · {levelLabel} risk</span>
       </div>
 
-      <div className="mt-2 divide-y divide-[#1e2b45]">
+      <div className="mt-2 divide-y divide-[#262626]">
         <Row label="Iceberg probability" value={`${((cell.iceberg_probability || 0) * 100).toFixed(0)}%`} />
         <Row label="Sea ice" value={`${(cell.ice_concentration * 100).toFixed(0)}% · ${cell.ice_type}`} />
         <Row label="Current" value={`${cell.current_speed.toFixed(2)} m/s · ${cell.current_direction.toFixed(0)}°`} />
@@ -65,7 +65,7 @@ export function CellDetailsDrawer({ cell, onClose }: CellDetailsDrawerProps) {
         <Row label="Depth" value={`${cell.water_depth.toFixed(0)} m`} />
       </div>
 
-      <p className="mt-2 text-[11px] leading-relaxed text-[#5c6b84]">
+      <p className="mt-2 text-[11px] leading-relaxed text-[#737373]">
         Click another cell to inspect it, or close this panel to return to the route.
       </p>
     </div>

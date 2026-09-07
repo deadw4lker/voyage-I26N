@@ -35,7 +35,7 @@ export function SystemPipelinePanel({ stages }: SystemPipelinePanelProps) {
           <span className="h-2 w-2 rounded-full bg-emerald-400" />
           <span>
             <span className="block text-[13px] font-medium text-slate-100">Systems normal</span>
-            <span className="tabular block text-[11.5px] text-[#5c6b84]">
+            <span className="tabular block text-[11.5px] text-[#737373]">
               {activeStages.length} stages · {totalMs} ms
             </span>
           </span>
@@ -47,11 +47,11 @@ export function SystemPipelinePanel({ stages }: SystemPipelinePanelProps) {
       </button>
 
       {open && (
-        <div className="mt-3 space-y-1 border-t border-[#182441] pt-3">
+        <div className="mt-3 space-y-1 border-t border-[#1e1e1e] pt-3">
           {activeStages.map((item) => (
             <div key={item.stage} className="flex items-center justify-between py-1 text-[12px]">
               <span className="text-slate-300">{item.stage}</span>
-              <span className="tabular text-[#5c6b84]">{item.latency_ms} ms</span>
+              <span className="tabular text-[#737373]">{item.latency_ms} ms</span>
             </div>
           ))}
         </div>
