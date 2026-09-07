@@ -1,0 +1,272 @@
+import { useState, useMemo } from 'react';
+import { MapContainer, TileLayer, Rectangle, Polyline, Marker, Popup, Tooltip, CircleMarker } from 'react-leaflet';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
+import type {
+  GridCellData, DataLayersState, IcebergData, MonteCarloResponse,
+  RouteResponse, RouteComparisonResponse
+} from '../../types/sih';
+import { CellDetailsDrawer } from './CellDetailsDrawer';
+
+// Quiet, purpose-built markers — no emoji, no glow
+const shipIcon = L.divIcon({
+  className: 'ops-ship-marker',
+  html: `<div style="background:#e8eef5; width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; border:1px solid rgba(10,17,30,.35); box-shadow:0 2px 8px rgba(0,0,0,.45);">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#0c1527" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l1.5 4h15L21 17"/><path d="M12 3v6"/><path d="M5 17l7-11 7 11"/></svg>
+         </div>`,
+  iconSize: [28, 28],
+  iconAnchor: [14, 14],
+});
+
+const destIcon = L.divIcon({
+  className: 'ops-dest-marker',
+  html: `<div style="background:#0c1527; width:26px; height:26px; border-radius:8px; display:flex; align-items:center; justify-content:center; border:1px solid #e8eef5; box-shadow:0 2px 8px rgba(0,0,0,.45);">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#e8eef5" stroke-width="2.2" stroke-linecap="round"><path d="M12 21s-7-5.5-7-11a7 7 0 0 1 14 0c0 5.5-7 11-7 11z"/><circle cx="12" cy="10" r="2.4"/></svg>
+         </div>`,
+  iconSize: [26, 26],
+  iconAnchor: [13, 13],
+});
+
+function bergIcon(risk: number) {
+  const fill = risk >= 60 ? '#c05757' : risk >= 30 ? '#c99a5b' : '#7fa6bd';
+  return L.divIcon({
+    className: 'ops-berg-marker',
+    html: `<div style="width:14px; height:14px; transform:rotate(45deg); background:${fill}; border:1.5px solid rgba(255,255,255,.9); border-radius:3px; box-shadow:0 1px 5px rgba(0,0,0,.5);"></div>`,
+    iconSize: [14, 14],
+    iconAnchor: [7, 7],
+  });
+}
+
+interface SIHMapViewProps {
+  riskGrid: GridCellData[][];
+  layers: DataLayersState;
+  icebergs: IcebergData[];
+  monteCarloData: MonteCarloResponse | null;
+  activeRoute: RouteResponse | null;
+  routeComparison: RouteComparisonResponse | null;
+  showComparison: boolean;
+  startPos: [number, number];
+  destPos: [number, number];
+}
+
+export function SIHMapView({
+  riskGrid,
+  layers,
+  icebergs,
+  monteCarloData,
+  activeRoute,
+  routeComparison,
+  showComparison,
+  startPos,
+  destPos,
+}: SIHMapViewProps) {
+  const [selectedCell, setSelectedCell] = useState<GridCellData | null>(null);
+
+  const getCellRiskColor = (score: number) => {
+    if (score >= 0.8) return '#8f2f35';
+    if (score >= 0.6) return '#b04a3e';
+    if (score >= 0.4) return '#b96a35';
+    if (score >= 0.2) return '#a8843c';
+    return '#2e7d5f';
+  };
+
+  const getCellOpacity = (score: number) => {
+    if (score >= 0.8) return 0.5;
+    if (score >= 0.6) return 0.4;
+    if (score >= 0.4) return 0.3;
+    if (score >= 0.2) return 0.2;
+    return 0.12;
+  };
+
+  const { trajectoryLines, totalTracks } = useMemo(() => {
+    if (!layers.predictedTrajectories || !monteCarloData) return { trajectoryLines: [], totalTracks: 0 };
+    const lines: [number, number][][] = [];
+    let total = 0;
+
+    Object.values(monteCarloData.trajectories).forEach((paths) => {
+      total += paths.length;
+      paths.forEach((path) => {
+        if (lines.length < 140) lines.push(path.map((pt) => [pt.latitude, pt.longitude]));
+      });
+    });
+
+    return { trajectoryLines: lines, totalTracks: total };
+  }, [layers.predictedTrajectories, monteCarloData]);
+
+  const routeColor =
+    activeRoute?.mode === 'safest' ? '#3faf7d' : activeRoute?.mode === 'fastest' ? '#d9a13b' : '#6aa9d6';
+
+  return (
+    <div className="relative h-full min-h-[420px] w-full bg-[#070d18] lg:min-h-0">
+      <MapContainer
+        center={[-67.0, 58.0]}
+        zoom={6}
+        style={{ width: '100%', height: '100%', minHeight: '420px' }}
+        attributionControl={false}
+        zoomControl={false}
+      >
+        <TileLayer
+          url="https://server.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Base/MapServer/tile/{z}/{y}/{x}"
+          maxZoom={12}
+        />
+
+        {riskGrid.map((row, rIdx) =>
+          row.map((cell, cIdx) => {
+            const nextLat = rIdx + 1 < riskGrid.length ? riskGrid[rIdx + 1][cIdx].latitude : cell.latitude - 0.24;
+            const nextLon = cIdx + 1 < row.length ? row[cIdx + 1].longitude : cell.longitude + 1.14;
+
+            const bounds: [[number, number], [number, number]] = [
+              [cell.latitude, cell.longitude],
+              [nextLat, nextLon],
+            ];
+
+            return (
+              <Rectangle
+                key={`cell-${cell.row}-${cell.col}`}
+                bounds={bounds}
+                pathOptions={{
+                  fillColor: getCellRiskColor(cell.risk_score),
+                  fillOpacity: getCellOpacity(cell.risk_score),
+                  color: '#16233c',
+                  weight: 0.4,
+                  opacity: 0.6,
+                }}
+                eventHandlers={{
+                  click: () => setSelectedCell(cell),
+                }}
+              >
+                <Tooltip sticky className="ops-tip" direction="top" offset={[0, -6]}>
+                  <div>
+                    <div className="font-medium">Cell {cell.row}, {cell.col} · {(cell.risk_score * 100).toFixed(0)} / 100</div>
+                    <div style={{ opacity: 0.75 }}>
+                      Ice {(cell.ice_concentration * 100).toFixed(0)}% · Berg {((cell.iceberg_probability || 0) * 100).toFixed(0)}%
+                    </div>
+                    <div style={{ opacity: 0.55, fontSize: 11 }}>Click for full conditions</div>
+                  </div>
+                </Tooltip>
+              </Rectangle>
+            );
+          })
+        )}
+
+        {layers.predictedTrajectories &&
+          trajectoryLines.map((line, idx) => (
+            <Polyline
+              key={`traj-${idx}`}
+              positions={line}
+              pathOptions={{
+                color: '#c98a96',
+                weight: 1,
+                opacity: 0.3,
+              }}
+            />
+          ))}
+
+        {layers.historicalIcebergs &&
+          riskGrid.flatMap((row) =>
+            row
+              .filter((c) => c.historical_iceberg_probability > 0.45)
+              .map((c) => (
+                <CircleMarker
+                  key={`hist-${c.row}-${c.col}`}
+                  center={[c.latitude, c.longitude]}
+                  radius={2.5}
+                  pathOptions={{
+                    fillColor: '#c99a5b',
+                    fillOpacity: 0.55,
+                    color: '#c99a5b',
+                    weight: 0,
+                  }}
+                />
+              ))
+          )}
+
+        {showComparison && routeComparison ? (
+          <>
+            <Polyline
+              positions={routeComparison.fastest.route}
+              pathOptions={{ color: '#d9a13b', weight: 2.5, opacity: 0.75, dashArray: '7 6' }}
+            />
+            <Polyline
+              positions={routeComparison.safest.route}
+              pathOptions={{ color: '#3faf7d', weight: 2.5, opacity: 0.75, dashArray: '2 5', lineCap: 'round' }}
+            />
+            <Polyline
+              positions={routeComparison.balanced.route}
+              pathOptions={{ color: '#6aa9d6', weight: 3.5, opacity: 0.95 }}
+            />
+          </>
+        ) : (
+          activeRoute && (
+            <Polyline
+              positions={activeRoute.route}
+              pathOptions={{ color: routeColor, weight: 3.5, opacity: 0.95 }}
+            />
+          )
+        )}
+
+        {icebergs.map((berg) => (
+          <Marker key={berg.id} position={[berg.latitude, berg.longitude]} icon={bergIcon(berg.risk_rating)}>
+            <Popup className="ops-popup">
+              <div>
+                <div className="font-medium">{berg.id} · {berg.size_category}</div>
+                <div className="tabular mt-1 text-[12px] opacity-80">
+                  {Math.abs(berg.latitude).toFixed(2)}°S, {berg.longitude.toFixed(2)}°E<br />
+                  Drifting {berg.drift_speed} kn at {berg.drift_direction}°<br />
+                  Risk {berg.risk_rating}%
+                </div>
+                <div className="mt-1 text-[11px] opacity-50">Source: {berg.source}</div>
+              </div>
+            </Popup>
+          </Marker>
+        ))}
+
+        <Marker position={startPos} icon={shipIcon}>
+          <Popup className="ops-popup">
+            <div className="font-medium">RV Bharati Explorer</div>
+            <div className="text-[12px] opacity-75">Current vessel position</div>
+          </Popup>
+        </Marker>
+
+        <Marker position={destPos} icon={destIcon}>
+          <Popup className="ops-popup">
+            <div className="font-medium">Bharati Station</div>
+            <div className="text-[12px] opacity-75">Landing harbour · destination</div>
+          </Popup>
+        </Marker>
+      </MapContainer>
+
+      {/* Bottom-left legend — compact, out of the way */}
+      <div className="absolute bottom-4 left-4 z-[900] rounded-lg border border-[#2a3c5c] bg-[#0c1527]/95 px-3 py-2.5 shadow-xl backdrop-blur">
+        <p className="text-[11px] font-medium text-[#8b98ad]">Risk</p>
+        <div className="mt-1.5 flex items-center gap-2.5">
+          {[
+            { label: 'Low', color: '#2e7d5f' },
+            { label: 'Mod', color: '#a8843c' },
+            { label: 'High', color: '#b96a35' },
+            { label: 'V.high', color: '#b04a3e' },
+            { label: 'Ext', color: '#8f2f35' },
+          ].map((s) => (
+            <span key={s.label} className="flex items-center gap-1.5">
+              <span className="h-2.5 w-2.5 rounded-[4px]" style={{ background: s.color }} />
+              <span className="text-[11px] text-slate-300">{s.label}</span>
+            </span>
+          ))}
+        </div>
+        <div className="mt-2 flex items-center gap-3 border-t border-[#1e2b45] pt-2">
+          <span className="flex items-center gap-1.5 text-[11px] text-slate-300">
+            <span className="inline-block h-0 w-5 border-t-[3px] border-[#6aa9d6]" /> Route
+          </span>
+          {layers.predictedTrajectories && totalTracks > 0 && (
+            <span className="flex items-center gap-1.5 text-[11px] text-slate-300">
+              <span className="inline-block h-0 w-5 border-t border-[#c98a96]" /> Drift ({totalTracks})
+            </span>
+          )}
+          <span className="text-[11px] text-[#5c6b84]">Click a cell for detail</span>
+        </div>
+      </div>
+
+      <CellDetailsDrawer cell={selectedCell} onClose={() => setSelectedCell(null)} />
+    </div>
+  );
+}

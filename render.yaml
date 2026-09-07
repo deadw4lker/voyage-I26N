@@ -1,5 +1,16 @@
 services:
   - type: web
+    name: hima-drishti-backend
+    runtime: python
+    buildCommand: pip install -r backend/requirements.txt
+    startCommand: uvicorn backend.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.13.0
+      - key: BOOT_SIMS
+        value: 80
+
+  - type: web
     name: hima-drishti
     runtime: node
     buildCommand: npm install && npm run build
@@ -7,3 +18,5 @@ services:
     envVars:
       - key: NODE_VERSION
         value: 22
+      - key: SIH_BACKEND
+        value: https://hima-drishti-backend.onrender.com

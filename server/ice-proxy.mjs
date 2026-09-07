@@ -32,6 +32,7 @@ try {
 }
 
 const PORT = Number(process.env.PORT || 3001);
+const SIH_BACKEND = process.env.SIH_BACKEND || 'http://127.0.0.1:8000';
 const UPSTREAM_GRIDDAP = 'https://coastwatch.pfeg.noaa.gov/erddap/griddap/ncdcOisst21NrtAgg';
 const UA = 'Voyage-I26N/0.0 (+polar-ops-demo)';
 const MAX_CELLS = 14400;
@@ -466,6 +467,33 @@ const server = http.createServer(async (req, res) => {
       try {
         const body = await handleSeries(parseParams(req.url));
         res.writeHead(200, { 'content-type': 'application/json', 'cache-control': 'public, max-age=21600' }).end(body);
+      } catch (e) { fail(e); }
+    } else if (pathname.startsWith('/api/') && !pathname.startsWith('/api/ice/')) {
+      // SIH simulation backend (FastAPI :8000). Pass-through so the built
+      // frontend works on a single port in production (`npm run serve`).
+      // When the backend is down, the frontend falls back to its local demo
+      // engine, so never fail hard here.
+      try {
+        const chunks = [];
+        for await (const c of req) chunks.push(c);
+        const body = Buffer.concat(chunks);
+        const target = new URL(req.url, SIH_BACKEND);
+        const proxy = (target.protocol === 'https:' ? https : http).request(
+          target,
+          { method: req.method, headers: { ...req.headers, host: target.host } },
+          (up) => {
+            res.writeHead(up.statusCode || 502, { ...up.headers, 'access-control-allow-origin': '*' });
+            up.pipe(res);
+          },
+        );
+        proxy.on('error', () => {
+          if (!res.headersSent) {
+            res.writeHead(503, { 'content-type': 'application/json', 'access-control-allow-origin': '*' }).end(
+              JSON.stringify({ error: 'simulation backend unavailable', demo: true }),
+            );
+          }
+        });
+        proxy.end(body);
       } catch (e) { fail(e); }
     } else if (pathname.startsWith('/api/')) {
       res.writeHead(404, { 'content-type': 'application/json' }).end(JSON.stringify({ error: 'unknown endpoint' }));

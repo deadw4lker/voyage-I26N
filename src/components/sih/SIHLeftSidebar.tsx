@@ -1,0 +1,206 @@
+import type { DataLayersState, MCDMWeights } from '../../types/sih';
+
+interface SIHLeftSidebarProps {
+  layers: DataLayersState;
+  onLayerToggle: (layer: keyof DataLayersState) => void;
+  predictionHours: number;
+  onPredictionHoursChange: (hours: number) => void;
+  routingMode: 'fastest' | 'safest' | 'balanced';
+  onRoutingModeChange: (mode: 'fastest' | 'safest' | 'balanced') => void;
+  maxRisk: number;
+  onMaxRiskChange: (risk: number) => void;
+  weights: MCDMWeights;
+  onWeightChange: (key: keyof MCDMWeights, val: number) => void;
+  onResetWeights: () => void;
+}
+
+export function SIHLeftSidebar({
+  layers,
+  onLayerToggle,
+  predictionHours,
+  onPredictionHoursChange,
+  routingMode,
+  onRoutingModeChange,
+  maxRisk,
+  onMaxRiskChange,
+  weights,
+  onWeightChange,
+  onResetWeights,
+}: SIHLeftSidebarProps) {
+  const timeOptions = [6, 12, 24, 48, 72];
+
+  const layerItems: { key: keyof DataLayersState; label: string; hint: string }[] = [
+    { key: 'seaIce', label: 'Sea ice', hint: 'Concentration' },
+    { key: 'oceanCurrents', label: 'Ocean currents', hint: 'Drift vectors' },
+    { key: 'wind', label: 'Wind', hint: 'Speed and direction' },
+    { key: 'waves', label: 'Waves', hint: 'Significant height' },
+    { key: 'historicalIcebergs', label: 'Iceberg history', hint: 'Density' },
+    { key: 'bathymetry', label: 'Bathymetry', hint: 'Water depth' },
+    { key: 'predictedTrajectories', label: 'Forecast tracks', hint: '72 h cone' },
+  ];
+
+  const weightItems: { key: keyof MCDMWeights; label: string }[] = [
+    { key: 'iceberg_risk', label: 'Iceberg risk' },
+    { key: 'sea_ice_risk', label: 'Sea ice' },
+    { key: 'ocean_current_risk', label: 'Currents' },
+    { key: 'weather_wind_risk', label: 'Wind' },
+    { key: 'wave_risk', label: 'Waves' },
+    { key: 'bathymetry_risk', label: 'Depth' },
+  ];
+
+  const modeHelp: Record<string, string> = {
+    fastest: 'Shortest time, accepts more risk.',
+    safest: 'Widest margin from ice and bergs.',
+    balanced: 'Best trade-off for supply runs.',
+  };
+
+  return (
+    <aside className="w-full shrink-0 border-b border-[#1e2b45] bg-[#0c1527] lg:w-[300px] lg:border-b-0 lg:border-r lg:overflow-y-auto lg:min-h-0">
+      <div className="space-y-3 p-3.5">
+        {/* Layers */}
+        <section className="ops-card p-4">
+          <h2 className="ops-section-title">Map layers</h2>
+          <p className="ops-section-sub mt-0.5">Choose what to overlay on the chart.</p>
+          <div className="mt-3 divide-y divide-[#182441]">
+            {layerItems.map((item) => {
+              const on = layers[item.key];
+              return (
+                <button
+                  key={item.key}
+                  onClick={() => onLayerToggle(item.key)}
+                  aria-pressed={on}
+                  className="flex w-full items-center justify-between gap-3 py-2 text-left"
+                >
+                  <span className="min-w-0">
+                    <span className={`block truncate text-[13px] ${on ? 'text-slate-100' : 'text-[#8b98ad]'}`}>
+                      {item.label}
+                    </span>
+                    <span className="block text-[11.5px] text-[#5c6b84]">{item.hint}</span>
+                  </span>
+                  <span
+                    className={`relative h-[18px] w-[32px] shrink-0 rounded-full transition-colors ${
+                      on ? 'bg-[#3d6a94]' : 'bg-[#22314e]'
+                    }`}
+                  >
+                    <span
+                      className={`absolute top-[2px] h-[14px] w-[14px] rounded-full bg-white shadow transition-all ${
+                        on ? 'left-[16px]' : 'left-[2px] opacity-80'
+                      }`}
+                    />
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </section>
+
+        {/* Forecast + routing */}
+        <section className="ops-card p-4">
+          <div className="flex items-baseline justify-between gap-2">
+            <h2 className="ops-section-title">Forecast horizon</h2>
+            <span className="tabular text-[12px] font-medium text-[#8fb8d8]">+{predictionHours} h</span>
+          </div>
+          <div className="mt-2.5 grid grid-cols-5 gap-1 rounded-lg border border-[#22314e] bg-[#0a1222] p-1">
+            {timeOptions.map((hours) => (
+              <button
+                key={hours}
+                onClick={() => onPredictionHoursChange(hours)}
+                className={`rounded-md py-1.5 text-[12px] tabular transition-colors ${
+                  predictionHours === hours
+                    ? 'bg-[#1c2f4f] font-medium text-slate-100'
+                    : 'text-[#8b98ad] hover:text-slate-200'
+                }`}
+              >
+                {hours}
+              </button>
+            ))}
+          </div>
+
+          <div className="my-4 border-t border-[#182441]" />
+
+          <h2 className="ops-section-title">Routing preference</h2>
+          <div className="mt-2.5 grid grid-cols-3 gap-1 rounded-lg border border-[#22314e] bg-[#0a1222] p-1">
+            {(['fastest', 'balanced', 'safest'] as const).map((mode) => (
+              <button
+                key={mode}
+                onClick={() => onRoutingModeChange(mode)}
+                aria-pressed={routingMode === mode}
+                className={`rounded-md py-1.5 text-[12.5px] capitalize transition-colors ${
+                  routingMode === mode
+                    ? 'bg-[#1c2f4f] font-medium text-slate-100'
+                    : 'text-[#8b98ad] hover:text-slate-200'
+                }`}
+              >
+                {mode}
+              </button>
+            ))}
+          </div>
+          <p className="mt-2 text-[12px] leading-relaxed text-[#5c6b84]">{modeHelp[routingMode]}</p>
+
+          <div className="mt-3 flex items-center justify-between">
+            <label htmlFor="max-risk" className="text-[12.5px] text-slate-300">
+              Risk tolerance
+            </label>
+            <span className="tabular text-[12px] font-medium text-slate-100">
+              {(maxRisk * 100).toFixed(0)}%
+            </span>
+          </div>
+          <input
+            id="max-risk"
+            type="range"
+            min="0.10"
+            max="1.00"
+            step="0.05"
+            value={maxRisk}
+            onChange={(e) => onMaxRiskChange(parseFloat(e.target.value))}
+            className="ops-range mt-2"
+          />
+          <div className="mt-1 flex justify-between text-[10.5px] text-[#5c6b84]">
+            <span>Cautious</span>
+            <span>Bold</span>
+          </div>
+        </section>
+
+        {/* Weights */}
+        <section className="ops-card p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="ops-section-title">Risk factors</h2>
+              <p className="ops-section-sub mt-0.5">Weight each input in the score.</p>
+            </div>
+            <button
+              onClick={onResetWeights}
+              className="rounded-md px-2 py-1 text-[12px] font-medium text-[#8b98ad] hover:bg-[#182441] hover:text-slate-200"
+            >
+              Reset
+            </button>
+          </div>
+          <div className="mt-3 space-y-3">
+            {weightItems.map((item) => (
+              <div key={item.key}>
+                <div className="flex items-center justify-between text-[12.5px]">
+                  <label htmlFor={`w-${item.key}`} className="text-slate-300">
+                    {item.label}
+                  </label>
+                  <span className="tabular text-[12px] text-[#8b98ad]">
+                    {(weights[item.key] * 100).toFixed(0)}%
+                  </span>
+                </div>
+                <input
+                  id={`w-${item.key}`}
+                  type="range"
+                  min="0.00"
+                  max="0.80"
+                  step="0.05"
+                  value={weights[item.key]}
+                  onChange={(e) => onWeightChange(item.key, parseFloat(e.target.value))}
+                  className="ops-range mt-1.5"
+                />
+              </div>
+            ))}
+          </div>
+        </section>
+      </div>
+    </aside>
+  );
+}

@@ -17,19 +17,29 @@
   --color-mint: #065f46;
   --color-border: #e3e8ef;
   --color-border-strong: #cbd3df;
+
+  /* Refined ops-console tokens */
+  --color-ops-bg: #0a111e;
+  --color-ops-panel: #101a2e;
+  --color-ops-panel-2: #0c1527;
+  --color-ops-border: #1e2b45;
+  --color-ops-border-soft: #182441;
+  --color-ops-text: #dbe4f0;
+  --color-ops-muted: #8b98ad;
+  --color-ops-faint: #5c6b84;
+  --color-ops-accent: #6aa9d6;
+
   --shadow-glow: 0 1px 2px rgba(16,24,40,.06);
   --radius-sm: 6px;
   --radius-md: 8px;
   --font-display: 'Inter', system-ui, sans-serif;
   --font-body: 'Inter', system-ui, sans-serif;
-  --font-mono: 'Inter', system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
 @layer base {
   * {
     box-sizing: border-box;
-    margin: 0;
-    padding: 0;
   }
 
   html, body, #root {
@@ -37,42 +47,103 @@
   }
 
   body {
-    background: #f1f4f7;
-    color: #111827;
+    background: #0a111e;
+    color: #dbe4f0;
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
-    font-size: 14px;
+    font-size: 13.5px;
     line-height: 1.5;
-    overflow: hidden;
     -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
   }
 
   ::selection {
-    background: #dbe3ec;
-    color: #111827;
+    background: #1e3a56;
+    color: #eaf2fa;
   }
 
   :focus-visible {
-    outline: 2px solid #1f3a5f;
+    outline: 2px solid #6aa9d6;
     outline-offset: 2px;
-    border-radius: 3px;
+    border-radius: 4px;
   }
 
   a {
-    color: #1f3a5f;
+    color: #6aa9d6;
     text-decoration: none;
   }
 
-  .mono {
-    font-family: 'Inter', system-ui, sans-serif;
+  .mono, .tabular {
+    font-family: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
     font-variant-numeric: tabular-nums;
+    letter-spacing: -0.01em;
   }
 
   .font-display {
     font-family: 'Inter', system-ui, sans-serif;
+    letter-spacing: -0.02em;
   }
 
   .font-body {
     font-family: 'Inter', system-ui, sans-serif;
+  }
+
+  /* Quiet scrollbars */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: #24344f transparent;
+  }
+  *::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  *::-webkit-scrollbar-thumb {
+    background-color: #24344f;
+    border-radius: 8px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+  }
+
+  /* Leaflet dark chrome overrides — one system tooltip/popup */
+  .leaflet-container {
+    background: #070d18;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+  .leaflet-tooltip.ops-tip {
+    background: #0f1a2f;
+    border: 1px solid #2a3c5c;
+    color: #dbe4f0;
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0,0,0,.45);
+    padding: 8px 10px;
+    font-size: 12px;
+    line-height: 1.45;
+  }
+  .leaflet-tooltip.ops-tip::before {
+    display: none;
+  }
+  .leaflet-popup.ops-popup .leaflet-popup-content-wrapper {
+    background: #0f1a2f;
+    border: 1px solid #2a3c5c;
+    color: #dbe4f0;
+    border-radius: 10px;
+    box-shadow: 0 12px 32px rgba(0,0,0,.5);
+  }
+  .leaflet-popup.ops-popup .leaflet-popup-content {
+    margin: 12px 14px;
+    font-size: 12.5px;
+    line-height: 1.5;
+  }
+  .leaflet-popup.ops-popup .leaflet-popup-tip {
+    background: #0f1a2f;
+    border: 1px solid #2a3c5c;
+  }
+  .leaflet-popup.ops-popup a.leaflet-popup-close-button {
+    color: #8b98ad;
+    top: 6px;
+    right: 8px;
   }
 }
 
@@ -154,6 +225,62 @@
     @apply border-border-strong text-ice bg-[#f8fafc];
   }
 
+  /* Ops console primitives */
+  .ops-card {
+    background: #101a2e;
+    border: 1px solid #1e2b45;
+    border-radius: 10px;
+  }
+
+  .ops-section-title {
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: #e6edf6;
+  }
+
+  .ops-section-sub {
+    font-size: 12px;
+    color: #8b98ad;
+    line-height: 1.45;
+  }
+
+  .ops-divider {
+    border-color: #1e2b45;
+  }
+
+  input[type=range].ops-range {
+    @apply appearance-none w-full h-1 rounded-full outline-none cursor-pointer;
+    background: #24344f;
+    height: 4px;
+  }
+
+  input[type=range].ops-range::-webkit-slider-thumb {
+    appearance: none;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #e6edf6;
+    border: 1px solid #3a4f75;
+    box-shadow: 0 1px 4px rgba(0,0,0,.4);
+    cursor: pointer;
+  }
+
+  input[type=range].ops-range::-webkit-slider-thumb:hover {
+    background: #ffffff;
+    border-color: #6aa9d6;
+  }
+
+  input[type=range].ops-range::-moz-range-thumb {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #e6edf6;
+    border: 1px solid #3a4f75;
+    cursor: pointer;
+  }
+
+  /* legacy range fallback */
   input[type=range] {
     @apply appearance-none w-full h-1 rounded-full bg-[#dbe1e9] outline-none;
   }
@@ -203,7 +330,7 @@
 @layer utilities {
   .scrollbar-thin {
     scrollbar-width: thin;
-    scrollbar-color: #cbd3df transparent;
+    scrollbar-color: #24344f transparent;
   }
 
   .scrollbar-thin::-webkit-scrollbar {
@@ -216,11 +343,11 @@
   }
 
   .scrollbar-thin::-webkit-scrollbar-thumb {
-    background-color: #cbd3df;
-    border-radius: 3px;
+    background-color: #24344f;
+    border-radius: 6px;
   }
 
   .scrollbar-thin::-webkit-scrollbar-thumb:hover {
-    background-color: #9aa7ba;
+    background-color: #33465f;
   }
 }
