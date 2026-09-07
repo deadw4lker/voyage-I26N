@@ -49,8 +49,8 @@ export function SIHLeftSidebar({
 
   const layerItems: { key: keyof DataLayersState; label: string; hint: string }[] = [
     { key: 'seaIce', label: 'Sea ice', hint: 'Concentration' },
-    { key: 'oceanCurrents', label: 'Ocean currents', hint: 'Drift vectors' },
-    { key: 'wind', label: 'Wind', hint: 'Speed and direction' },
+    { key: 'oceanCurrents', label: 'Ocean currents', hint: 'Drift particles' },
+    { key: 'wind', label: 'Wind', hint: 'Animated flow' },
     { key: 'waves', label: 'Waves', hint: 'Significant height' },
     { key: 'historicalIcebergs', label: 'Iceberg history', hint: 'Density' },
     { key: 'bathymetry', label: 'Bathymetry', hint: 'Water depth' },

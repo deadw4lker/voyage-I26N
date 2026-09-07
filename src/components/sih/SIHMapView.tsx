@@ -7,6 +7,7 @@ import type {
   RouteResponse, RouteComparisonResponse
 } from '../../types/sih';
 import { CellDetailsDrawer } from './CellDetailsDrawer';
+import { FlowField } from './FlowField';
 
 // Quiet, purpose-built markers — no emoji, no glow
 const shipIcon = L.divIcon({
@@ -175,6 +176,9 @@ export function SIHMapView({
           maxZoom={12}
         />
 
+        {/* Animated wind / current flow particles */}
+        <FlowField riskGrid={riskGrid} layers={layers} />
+
         {riskGrid.map((row, rIdx) =>
           row.map((cell, cIdx) => {
             const nextLat = rIdx + 1 < riskGrid.length ? riskGrid[rIdx + 1][cIdx].latitude : cell.latitude - 0.24;
@@ -331,13 +335,23 @@ export function SIHMapView({
             </span>
           ))}
         </div>
-        <div className="mt-2 flex items-center gap-3 border-t border-[#262626] pt-2">
+        <div className="mt-2 flex flex-wrap items-center gap-3 border-t border-[#262626] pt-2">
           <span className="flex items-center gap-1.5 text-[11px] text-slate-300">
             <span className="inline-block h-0 w-5 border-t-[3px] border-[#38bdf8]" /> Route
           </span>
           {layers.predictedTrajectories && totalTracks > 0 && (
             <span className="flex items-center gap-1.5 text-[11px] text-slate-300">
               <span className="inline-block h-0 w-5 border-t border-[#e08a9b]" /> Drift ({totalTracks})
+            </span>
+          )}
+          {layers.wind && (
+            <span className="flex items-center gap-1.5 text-[11px] text-slate-300">
+              <span className="inline-block h-0 w-5 border-t border-[#d2dbe3]" /> Wind flow
+            </span>
+          )}
+          {layers.oceanCurrents && (
+            <span className="flex items-center gap-1.5 text-[11px] text-slate-300">
+              <span className="inline-block h-0 w-5 border-t border-[#5eead4]" /> Current drift
             </span>
           )}
           <span className="text-[11px] text-[#737373]">Click a cell for detail</span>
