@@ -220,10 +220,9 @@ export function FlowField({ riskGrid, layers }: FlowFieldProps) {
 
       // Fade previous trails toward transparent.
       ctx.globalCompositeOperation = 'destination-in';
-      ctx.fillStyle = 'rgba(0,0,0,0.90)';
+      ctx.fillStyle = 'rgba(0,0,0,0.88)';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       ctx.globalCompositeOperation = 'lighter';
-      ctx.lineWidth = 1.2;
       ctx.lineCap = 'round';
 
       const target = Math.min(850, Math.floor((size.x * size.y) / 1100));
@@ -260,7 +259,12 @@ export function FlowField({ riskGrid, layers }: FlowFieldProps) {
         p.lat = dest.lat;
         p.lon = dest.lng;
         const color = p.kind === 'wind' ? WIND_COLOR : CURRENT_COLOR;
-        ctx.strokeStyle = `rgba(${color},${(0.25 + 0.55 * Math.min(1, speed / field.maxSpeed)).toFixed(3)})`;
+        const norm = Math.min(1, speed / field.maxSpeed);
+        // Drift (current) particles render a touch brighter and thicker.
+        const base = p.kind === 'current' ? 0.35 : 0.25;
+        const gain = p.kind === 'current' ? 0.6 : 0.55;
+        ctx.lineWidth = p.kind === 'current' ? 1.4 : 1.2;
+        ctx.strokeStyle = `rgba(${color},${(base + gain * norm).toFixed(3)})`;
         ctx.beginPath();
         ctx.moveTo(from.x, from.y);
         ctx.lineTo(to.x, to.y);
