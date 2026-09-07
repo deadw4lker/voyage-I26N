@@ -1,4 +1,7 @@
 import type { DataLayersState, MCDMWeights } from '../../types/sih';
+import { PLACES, VESSEL_PLACE } from '../../lib/places';
+
+export type OriginMode = 'vessel' | 'custom';
 
 interface SIHLeftSidebarProps {
   layers: DataLayersState;
@@ -12,7 +15,16 @@ interface SIHLeftSidebarProps {
   weights: MCDMWeights;
   onWeightChange: (key: keyof MCDMWeights, val: number) => void;
   onResetWeights: () => void;
+  originMode: OriginMode;
+  onOriginModeChange: (mode: OriginMode) => void;
+  startPlaceId: string;
+  onStartPlaceChange: (id: string) => void;
+  destPlaceId: string;
+  onDestPlaceChange: (id: string) => void;
 }
+
+const selectClass =
+  'w-full rounded-lg border border-[#22314e] bg-[#0a1222] px-2.5 py-2 text-[12.5px] text-slate-200 outline-none transition-colors hover:border-[#2a3c5c] focus:border-[#3d6a94] disabled:opacity-50';
 
 export function SIHLeftSidebar({
   layers,
@@ -26,6 +38,12 @@ export function SIHLeftSidebar({
   weights,
   onWeightChange,
   onResetWeights,
+  originMode,
+  onOriginModeChange,
+  startPlaceId,
+  onStartPlaceChange,
+  destPlaceId,
+  onDestPlaceChange,
 }: SIHLeftSidebarProps) {
   const timeOptions = [6, 12, 24, 48, 72];
 
@@ -57,6 +75,71 @@ export function SIHLeftSidebar({
   return (
     <aside className="w-full shrink-0 border-b border-[#1e2b45] bg-[#0c1527] lg:w-[300px] lg:border-b-0 lg:border-r lg:overflow-y-auto lg:min-h-0">
       <div className="space-y-3 p-3.5">
+        {/* Route endpoints */}
+        <section className="ops-card p-4">
+          <h2 className="ops-section-title">Route endpoints</h2>
+          <p className="ops-section-sub mt-0.5">Start from the vessel or any named place.</p>
+
+          <div className="mt-2.5 grid grid-cols-2 gap-1 rounded-lg border border-[#22314e] bg-[#0a1222] p-1">
+            {(['vessel', 'custom'] as const).map((m) => (
+              <button
+                key={m}
+                onClick={() => onOriginModeChange(m)}
+                aria-pressed={originMode === m}
+                className={`rounded-md py-1.5 text-[12.5px] capitalize transition-colors ${
+                  originMode === m
+                    ? 'bg-[#1c2f4f] font-medium text-slate-100'
+                    : 'text-[#8b98ad] hover:text-slate-200'
+                }`}
+              >
+                {m === 'vessel' ? 'Current location' : 'Choose start'}
+              </button>
+            ))}
+          </div>
+
+          {originMode === 'vessel' ? (
+            <p className="tabular mt-2.5 rounded-lg bg-[#0a1222] px-3 py-2 text-[12px] text-[#8b98ad]">
+              From {VESSEL_PLACE.name} · {Math.abs(VESSEL_PLACE.coords[0]).toFixed(2)}°S, {VESSEL_PLACE.coords[1].toFixed(2)}°E
+            </p>
+          ) : (
+            <div className="mt-2.5">
+              <label htmlFor="start-place" className="mb-1 block text-[12px] text-[#8b98ad]">
+                Start place
+              </label>
+              <select
+                id="start-place"
+                value={startPlaceId}
+                onChange={(e) => onStartPlaceChange(e.target.value)}
+                className={selectClass}
+              >
+                {PLACES.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          <div className="mt-2.5">
+            <label htmlFor="dest-place" className="mb-1 block text-[12px] text-[#8b98ad]">
+              Destination
+            </label>
+            <select
+              id="dest-place"
+              value={destPlaceId}
+              onChange={(e) => onDestPlaceChange(e.target.value)}
+              className={selectClass}
+            >
+              {PLACES.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        </section>
+
         {/* Layers */}
         <section className="ops-card p-4">
           <h2 className="ops-section-title">Map layers</h2>

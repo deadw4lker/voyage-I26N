@@ -47,6 +47,8 @@ interface SIHMapViewProps {
   showComparison: boolean;
   startPos: [number, number];
   destPos: [number, number];
+  startLabel?: string;
+  destLabel?: string;
 }
 
 export function SIHMapView({
@@ -59,6 +61,8 @@ export function SIHMapView({
   showComparison,
   startPos,
   destPos,
+  startLabel = 'RV Bharati Explorer',
+  destLabel = 'Bharati Station',
 }: SIHMapViewProps) {
   const [selectedCell, setSelectedCell] = useState<GridCellData | null>(null);
 
@@ -223,15 +227,15 @@ export function SIHMapView({
 
         <Marker position={startPos} icon={shipIcon}>
           <Popup className="ops-popup">
-            <div className="font-medium">RV Bharati Explorer</div>
-            <div className="text-[12px] opacity-75">Current vessel position</div>
+            <div className="font-medium">{startLabel}</div>
+            <div className="text-[12px] opacity-75">Route origin</div>
           </Popup>
         </Marker>
 
         <Marker position={destPos} icon={destIcon}>
           <Popup className="ops-popup">
-            <div className="font-medium">Bharati Station</div>
-            <div className="text-[12px] opacity-75">Landing harbour · destination</div>
+            <div className="font-medium">{destLabel}</div>
+            <div className="text-[12px] opacity-75">Destination</div>
           </Popup>
         </Marker>
       </MapContainer>

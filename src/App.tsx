@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import type {
   GridCellData, DataLayersState, MCDMWeights, IcebergData,
   MonteCarloResponse, RouteResponse, RouteComparisonResponse, SystemStatus
@@ -7,13 +7,13 @@ import {
   fetchSystemStatus, fetchGridRiskMap, fetchIcebergs, updateWeights,
   predictTrajectory, calculateRoute, compareRoutes, isDemoFallback,
 } from './services/api';
-import { SIHHeader } from './components/sih/SIHHeader';
-import { SIHLeftSidebar } from './components/sih/SIHLeftSidebar';
+import { VESSEL_POS, findPlace } from './lib/places';
+import { buildAlerts } from './lib/alerts';
+import { SIHHeader, type OpsView } from './components/sih/SIHHeader';
+import { SIHLeftSidebar, type OriginMode } from './components/sih/SIHLeftSidebar';
 import { SIHRightSidebar } from './components/sih/SIHRightSidebar';
 import { SIHMapView } from './components/sih/SIHMapView';
-
-const START_POS: [number, number] = [-65.2, 42.5];
-const DEST_POS: [number, number] = [-69.4, 76.2];
+import { AlertsView } from './components/sih/AlertsView';
 
 const DEFAULT_WEIGHTS: MCDMWeights = {
   iceberg_risk: 0.35,
@@ -44,6 +44,23 @@ export default function App() {
   const [isRouteUpdating, setIsRouteUpdating] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [demoMode, setDemoMode] = useState<boolean>(false);
+  const [view, setView] = useState<OpsView>('operations');
+
+  // Route endpoints — vessel position or any named place.
+  const [originMode, setOriginMode] = useState<OriginMode>('vessel');
+  const [startPlaceId, setStartPlaceId] = useState<string>('mawson');
+  const [destPlaceId, setDestPlaceId] = useState<string>('bharati');
+
+  const startPos: [number, number] = useMemo(
+    () => (originMode === 'vessel' ? VESSEL_POS : (findPlace(startPlaceId)?.coords ?? VESSEL_POS)),
+    [originMode, startPlaceId],
+  );
+  const destPos: [number, number] = useMemo(
+    () => findPlace(destPlaceId)?.coords ?? ([-69.4, 76.2] as [number, number]),
+    [destPlaceId],
+  );
+  const startLabel = originMode === 'vessel' ? 'RV Bharati Explorer' : (findPlace(startPlaceId)?.name ?? 'Start');
+  const destLabel = findPlace(destPlaceId)?.name ?? 'Destination';
 
   const [layers, setLayers] = useState<DataLayersState>({
     seaIce: true,
@@ -62,6 +79,7 @@ export default function App() {
   const [routeComparison, setRouteComparison] = useState<RouteComparisonResponse | null>(null);
   const [showComparison, setShowComparison] = useState<boolean>(false);
   const [systemStatus, setSystemStatus] = useState<SystemStatus | null>(null);
+  const [acknowledged, setAcknowledged] = useState<Set<string>>(new Set());
 
   // Single-flight guards so rapid control changes can't stack stale responses.
   const routeReqId = useRef(0);
@@ -70,6 +88,19 @@ export default function App() {
   const syncDemoFlag = useCallback(() => {
     if (isDemoFallback()) setDemoMode(true);
   }, []);
+
+  const alerts = useMemo(
+    () => buildAlerts({ icebergs, riskGrid, activeRoute, monteCarlo: monteCarloData }),
+    [icebergs, riskGrid, activeRoute, monteCarloData],
+  );
+  const unackedCount = alerts.filter((a) => !acknowledged.has(a.id)).length;
+
+  const acknowledge = useCallback((id: string) => {
+    setAcknowledged((prev) => new Set(prev).add(id));
+  }, []);
+  const acknowledgeAll = useCallback(() => {
+    setAcknowledged(new Set(alerts.map((a) => a.id)));
+  }, [alerts]);
 
   // Initial load — backend if available, local demo engine otherwise.
   useEffect(() => {
@@ -96,7 +127,7 @@ export default function App() {
         setRiskGrid(gridAfterMc);
 
         const myId = ++routeReqId.current;
-        const routeRes = await calculateRoute(START_POS, DEST_POS, 'balanced', 0.70, 14.0);
+        const routeRes = await calculateRoute(VESSEL_POS, [-69.4, 76.2], 'balanced', 0.70, 14.0);
         if (cancelled || myId !== routeReqId.current) return;
         setActiveRoute(routeRes);
         syncDemoFlag();
@@ -114,7 +145,7 @@ export default function App() {
     return () => { cancelled = true; };
   }, [syncDemoFlag]);
 
-  // Debounced route recalc on mode / risk tolerance change.
+  // Debounced route recalc on mode / risk / endpoints change.
   const debouncedMode = useDebouncedValue(routingMode, 350);
   const debouncedRisk = useDebouncedValue(maxRisk, 350);
   useEffect(() => {
@@ -124,7 +155,7 @@ export default function App() {
       const myId = ++routeReqId.current;
       setIsRouteUpdating(true);
       try {
-        const routeRes = await calculateRoute(START_POS, DEST_POS, debouncedMode, debouncedRisk, 14.0);
+        const routeRes = await calculateRoute(startPos, destPos, debouncedMode, debouncedRisk, 14.0);
         if (cancelled || myId !== routeReqId.current) return;
         setActiveRoute(routeRes);
         syncDemoFlag();
@@ -136,7 +167,8 @@ export default function App() {
     }
     updateRoute();
     return () => { cancelled = true; };
-  }, [debouncedMode, debouncedRisk, riskGrid.length, syncDemoFlag]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedMode, debouncedRisk, startPos[0], startPos[1], destPos[0], destPos[1], riskGrid.length, syncDemoFlag]);
 
   // Debounced MCDM weight recompute — one grid+route refresh per pause, not per tick.
   const debouncedWeights = useDebouncedValue(weights, 500);
@@ -152,11 +184,11 @@ export default function App() {
         const gridRes = await updateWeights(debouncedWeights);
         if (cancelled || myId !== routeReqId.current) return;
         setRiskGrid(gridRes);
-        const routeRes = await calculateRoute(START_POS, DEST_POS, routingMode, maxRisk, 14.0);
+        const routeRes = await calculateRoute(startPos, destPos, routingMode, maxRisk, 14.0);
         if (cancelled || myId !== routeReqId.current) return;
         setActiveRoute(routeRes);
         if (showComparison) {
-          const compRes = await compareRoutes(START_POS, DEST_POS, maxRisk, 14.0);
+          const compRes = await compareRoutes(startPos, destPos, maxRisk, 14.0);
           if (cancelled || myId !== routeReqId.current) return;
           setRouteComparison(compRes);
         }
@@ -189,12 +221,12 @@ export default function App() {
       if (myId !== simReqId.current) return;
       setRiskGrid(gridRes);
 
-      const routeRes = await calculateRoute(START_POS, DEST_POS, routingMode, maxRisk, 14.0);
+      const routeRes = await calculateRoute(startPos, destPos, routingMode, maxRisk, 14.0);
       if (myId !== simReqId.current) return;
       setActiveRoute(routeRes);
 
       if (showComparison) {
-        const compRes = await compareRoutes(START_POS, DEST_POS, maxRisk, 14.0);
+        const compRes = await compareRoutes(startPos, destPos, maxRisk, 14.0);
         if (myId !== simReqId.current) return;
         setRouteComparison(compRes);
       }
@@ -211,7 +243,7 @@ export default function App() {
     setIsLoading(true);
     setError(null);
     try {
-      const compRes = await compareRoutes(START_POS, DEST_POS, maxRisk, 14.0);
+      const compRes = await compareRoutes(startPos, destPos, maxRisk, 14.0);
       setRouteComparison(compRes);
       setShowComparison(true);
       syncDemoFlag();
@@ -251,6 +283,9 @@ export default function App() {
         isLoading={isLoading}
         activePreset={activePreset}
         onPresetSelect={handlePresetSelect}
+        view={view}
+        onViewChange={setView}
+        alertCount={unackedCount}
       />
 
       {(error || demoMode) && (
@@ -266,52 +301,71 @@ export default function App() {
         </div>
       )}
 
-      <div className="flex-1 flex flex-col lg:flex-row min-h-0">
-        <SIHLeftSidebar
-          layers={layers}
-          onLayerToggle={handleLayerToggle}
-          predictionHours={predictionHours}
-          onPredictionHoursChange={setPredictionHours}
-          routingMode={routingMode}
-          onRoutingModeChange={setRoutingMode}
-          maxRisk={maxRisk}
-          onMaxRiskChange={setMaxRisk}
-          weights={weights}
-          onWeightChange={handleWeightChange}
-          onResetWeights={handleResetWeights}
-        />
-
-        <main className="flex-1 relative min-h-[420px] lg:min-h-0 min-w-0 bg-[#070d18]">
-          <SIHMapView
-            riskGrid={riskGrid}
+      {view === 'alerts' ? (
+        <div className="flex-1 min-h-0 flex">
+          <AlertsView
+            alerts={alerts}
+            acknowledged={acknowledged}
+            onAcknowledge={acknowledge}
+            onAcknowledgeAll={acknowledgeAll}
+          />
+        </div>
+      ) : (
+        <div className="flex-1 flex flex-col lg:flex-row min-h-0">
+          <SIHLeftSidebar
             layers={layers}
-            icebergs={icebergs}
-            monteCarloData={monteCarloData}
+            onLayerToggle={handleLayerToggle}
+            predictionHours={predictionHours}
+            onPredictionHoursChange={setPredictionHours}
+            routingMode={routingMode}
+            onRoutingModeChange={setRoutingMode}
+            maxRisk={maxRisk}
+            onMaxRiskChange={setMaxRisk}
+            weights={weights}
+            onWeightChange={handleWeightChange}
+            onResetWeights={handleResetWeights}
+            originMode={originMode}
+            onOriginModeChange={setOriginMode}
+            startPlaceId={startPlaceId}
+            onStartPlaceChange={setStartPlaceId}
+            destPlaceId={destPlaceId}
+            onDestPlaceChange={setDestPlaceId}
+          />
+
+          <main className="flex-1 relative min-h-[420px] lg:min-h-0 min-w-0 bg-[#070d18]">
+            <SIHMapView
+              riskGrid={riskGrid}
+              layers={layers}
+              icebergs={icebergs}
+              monteCarloData={monteCarloData}
+              activeRoute={activeRoute}
+              routeComparison={routeComparison}
+              showComparison={showComparison}
+              startPos={startPos}
+              destPos={destPos}
+              startLabel={startLabel}
+              destLabel={destLabel}
+            />
+            {(isLoading || isRouteUpdating) && (
+              <div className="absolute inset-0 z-[800] flex items-center justify-center bg-[#070d18]/55 pointer-events-none">
+                <div className="flex items-center gap-2.5 rounded-full border border-[#2a3c5c] bg-[#0f1a2f]/95 px-4 py-2 text-[12.5px] text-slate-200 shadow-xl">
+                  <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-slate-500 border-t-slate-100" />
+                  {isLoading ? 'Updating risk map and route…' : 'Recalculating route…'}
+                </div>
+              </div>
+            )}
+          </main>
+
+          <SIHRightSidebar
             activeRoute={activeRoute}
             routeComparison={routeComparison}
-            showComparison={showComparison}
-            startPos={START_POS}
-            destPos={DEST_POS}
+            icebergs={icebergs}
+            predictionConfidence={monteCarloData?.confidence || 85}
+            uncertaintyRadiusKm={monteCarloData?.uncertainty_radius_km || 14.2}
+            systemStatus={systemStatus}
           />
-          {(isLoading || isRouteUpdating) && (
-            <div className="absolute inset-0 z-[800] flex items-center justify-center bg-[#070d18]/55 pointer-events-none">
-              <div className="flex items-center gap-2.5 rounded-full border border-[#2a3c5c] bg-[#0f1a2f]/95 px-4 py-2 text-[12.5px] text-slate-200 shadow-xl">
-                <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-slate-500 border-t-slate-100" />
-                {isLoading ? 'Updating risk map and route…' : 'Recalculating route…'}
-              </div>
-            </div>
-          )}
-        </main>
-
-        <SIHRightSidebar
-          activeRoute={activeRoute}
-          routeComparison={routeComparison}
-          icebergs={icebergs}
-          predictionConfidence={monteCarloData?.confidence || 85}
-          uncertaintyRadiusKm={monteCarloData?.uncertainty_radius_km || 14.2}
-          systemStatus={systemStatus}
-        />
-      </div>
+        </div>
+      )}
     </div>
   );
 }
