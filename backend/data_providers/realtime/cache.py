@@ -14,7 +14,7 @@ CACHE_DIR = os.path.join(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
     'data_cache')
 
-UA = 'Voyage-I26N/1.0 (+sih-demo; realtime-layer-cache)'
+UA = 'Hima-Drishti/1.0 (+sih-demo; realtime-layer-cache)'
 
 
 def _path(name: str) -> str:

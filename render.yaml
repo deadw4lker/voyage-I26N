@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: voyage-i26n-backend
+    name: hima-drishti-backend
     runtime: python
     buildCommand: pip install -r backend/requirements.txt
     startCommand: uvicorn backend.main:app --host 0.0.0.0 --port $PORT
@@ -11,7 +11,7 @@ services:
         value: 80
 
   - type: web
-    name: voyage-i26n
+    name: hima-drishti
     runtime: node
     buildCommand: npm install && npm run build
     startCommand: node server/ice-proxy.mjs
@@ -19,4 +19,4 @@ services:
       - key: NODE_VERSION
         value: 22
       - key: SIH_BACKEND
-        value: https://voyage-i26n-backend.onrender.com
+        value: https://hima-drishti-backend.onrender.com

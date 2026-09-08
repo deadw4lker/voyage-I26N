@@ -40,7 +40,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from typing import List, Dict, Any
 
 app = FastAPI(
-    title="Antarctic Intelligent Navigation & Risk Prediction API",
+    title="Hima-Drishti — Antarctic Intelligent Navigation & Risk Prediction API",
     description="SIH Prototype for AI-Assisted Dynamic Iceberg Risk Mapping and Safe Ship Routing",
     version="1.0.0"
 )
@@ -87,7 +87,7 @@ print(f"[backend] warm-up done in {time.time() - _t0:.1f}s "
 @app.get("/")
 def read_root():
     return {
-        "project": "Antarctic Intelligent Navigation & Risk Prediction System",
+        "project": "Hima-Drishti — Antarctic Intelligent Navigation & Risk Prediction System",
         "sih_track": "AI-Assisted Dynamic Iceberg Risk Mapping & Safe Ship Routing",
         "version": "1.0.0",
         "status": "OPERATIONAL"

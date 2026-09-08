@@ -1,5 +1,5 @@
 /**
- * Voyage-I26N ice data proxy.
+ * Hima-Drishti ice data proxy.
  *
  * The browser cannot call NOAA ERDDAP directly (no CORS headers), so this
  * same-origin server forwards small, bounded subset queries and caches them
@@ -34,7 +34,7 @@ try {
 const PORT = Number(process.env.PORT || 3001);
 const SIH_BACKEND = process.env.SIH_BACKEND || 'http://127.0.0.1:8000';
 const UPSTREAM_GRIDDAP = 'https://coastwatch.pfeg.noaa.gov/erddap/griddap/ncdcOisst21NrtAgg';
-const UA = 'Voyage-I26N/0.0 (+polar-ops-demo)';
+const UA = 'Hima-Drishti/0.0 (+polar-ops-demo)';
 const MAX_CELLS = 14400;
 const TTL_STATUS = 60 * 60 * 1000;
 const TTL_DATA = 6 * 60 * 60 * 1000;
@@ -508,5 +508,5 @@ const server = http.createServer(async (req, res) => {
 });
 
 server.listen(PORT, () => {
-  console.log(`Voyage-I26N ice proxy on http://localhost:${PORT} (serving ${DIST_DIR})`);
+  console.log(`Hima-Drishti ice proxy on http://localhost:${PORT} (serving ${DIST_DIR})`);
 });

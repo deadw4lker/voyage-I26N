@@ -33,7 +33,7 @@ export function SIHHeader({
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                 <h1 className="truncate text-[14px] font-semibold tracking-[-0.01em] text-slate-100">
-                  Voyage-I26N
+                  Hima-Drishti
                 </h1>
                 <span className="hidden text-[12px] text-[#737373] sm:inline">·</span>
                 <p className="truncate text-[12px] text-[#8b98ad]">

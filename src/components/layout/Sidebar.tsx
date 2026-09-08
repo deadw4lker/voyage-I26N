@@ -37,7 +37,7 @@ export function Sidebar({ currentView, onNavigate }: SidebarProps) {
           </svg>
         </div>
         <div className="leading-tight">
-          <div className="text-[13px] font-semibold text-ice tracking-tight">Voyage-I26N</div>
+          <div className="text-[13px] font-semibold text-ice tracking-tight">Hima-Drishti</div>
           <div className="text-[11px] text-ice-faint">Polar Operations</div>
         </div>
       </div>
